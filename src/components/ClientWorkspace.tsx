@@ -74,7 +74,7 @@ import {
   resolveIntercityEndpoints,
 } from '../domain/tracking';
 import { ChatPanel } from './ChatPanel';
-import { DriverReviewsSection } from './DriverReviewsSection';
+
 import { DynamicPriceSimulator, type SimulatorApplyPayload } from './DynamicPriceSimulator';
 import { FavoriteDriversPanel } from './FavoriteDriversPanel';
 import { FavoriteToggleButton } from './FavoriteToggleButton';
@@ -82,6 +82,7 @@ import { LiveTrackingMap } from './LiveTrackingMap';
 import { QuickIncidentPanel, type QuickIncidentSubmitPayload } from './QuickIncidentPanel';
 import { RouteMapPreview } from './RouteMapPreview';
 import { QuickRequest } from './QuickRequest';
+import { TopDrivers } from './TopDrivers';
 import { ReliabilityBadge } from './ReliabilityBadge';
 import { computeReliability } from '../domain/trust';
 import { LocationPinPicker } from './LocationPinPicker';
@@ -191,7 +192,6 @@ export function ClientWorkspace({
   // Active Ride selection, favorites & rating/offers state
   const [selectedRideId, setSelectedRideId] = useState<string>(rides[0]?.id ?? '');
   const [offerSort, setOfferSort] = useState<'price' | 'rating' | 'favorites'>('price');
-  const [reviewDriverFilter, setReviewDriverFilter] = useState<string>('all');
   const [preferredDriverId, setPreferredDriverId] = useState<string | null>(null);
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [disputeCategory, setDisputeCategory] = useState<DisputeCategory>('damage');
@@ -828,9 +828,9 @@ export function ClientWorkspace({
     target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const focusDriverReviews = (driverId: string) => {
-    setReviewDriverFilter(driverId);
-    const target = document.getElementById('driver-community-reviews');
+  const focusDriverReviews = (_driverId: string) => {
+    // Les avis sont désormais intégrés aux cartes « Top chauffeurs ».
+    const target = document.getElementById('top-drivers-panel');
     target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -1167,6 +1167,27 @@ export function ClientWorkspace({
         pricingRules={pricingRules}
         settings={settings}
         onApply={handleApplySimulation}
+      />
+
+      {/* Top chauffeurs — découverte (urbain ou interville), jamais le broadcast C10 */}
+      <TopDrivers
+        locale={locale}
+        mode={mode}
+        drivers={drivers}
+        reviews={reviews}
+        settings={settings}
+        favoriteDriverIds={favoriteDriverIds}
+        onToggleFavorite={handleToggleFavorite}
+        onRequestDriver={(d) => {
+          setPreferredDriverId(d.id);
+          setVehicleCategory(d.vehicle.category);
+          setSuccessBanner(
+            isAr
+              ? `تم اختيار ${d.fullName} لطلبك.`
+              : `${d.fullName} sélectionné pour votre demande.`
+          );
+        }}
+        wilayaName={wilayaName}
       />
 
       {/* Saved Route Templates Bar (1-click repeatable B2B / personal routes) */}
@@ -3394,18 +3415,6 @@ export function ClientWorkspace({
         onUpdateNote={handleUpdateFavoriteNote}
         onRequestDriver={handleRequestFavoriteDriver}
         onInspectReviews={focusDriverReviews}
-      />
-
-      {/* Community Driver Reviews & Trust Section */}
-      <DriverReviewsSection
-        id="driver-community-reviews"
-        locale={locale}
-        drivers={drivers}
-        reviews={reviews}
-        selectedDriverId={reviewDriverFilter}
-        onSelectDriverId={setReviewDriverFilter}
-        favoriteDriverIds={favoriteDriverIds}
-        onToggleFavorite={handleToggleFavorite}
       />
     </div>
   );
