@@ -79,8 +79,8 @@ export function QuickRequest({ locale, wilayas, onPublish, onAdvanced }: Props) 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {services.map((s) => (
               <button key={s} type="button" onClick={() => chooseService(s)}
-                className="p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-orange-500 hover:bg-orange-50/50 dark:hover:bg-orange-950/20 flex flex-col items-center gap-2 text-center">
-                <ServiceIcon service={s} className="w-14 h-12" />
+                className="p-3 sm:p-4 min-h-[140px] rounded-lg border border-slate-200 dark:border-slate-700 hover:border-orange-500 hover:bg-orange-50/50 dark:hover:bg-orange-950/20 flex flex-col items-center justify-center gap-2 text-center">
+                <ServiceIcon service={s} className="w-28 h-24 shrink-0" />
                 <span className="text-xs font-semibold text-slate-800 dark:text-slate-100">
                   {isAr ? SERVICE_LABELS[s].ar : SERVICE_LABELS[s].fr}
                 </span>
@@ -155,8 +155,8 @@ export function QuickRequest({ locale, wilayas, onPublish, onAdvanced }: Props) 
 
           {/* récapitulatif */}
           <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center gap-3 text-xs">
-            <ServiceIcon service={preset.service} className="w-12 h-9" />
-            <VehicleIcon category={preset.vehicle} className="w-14 h-10" />
+            <ServiceIcon service={preset.service} className="w-16 h-12" />
+            <VehicleIcon category={preset.vehicle} className="w-20 h-14" />
             <span className="font-semibold text-slate-800 dark:text-slate-100">
               {isAr ? preset.labelAr : preset.labelFr} · {name}
             </span>

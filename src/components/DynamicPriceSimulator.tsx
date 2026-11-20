@@ -331,7 +331,7 @@ export function DynamicPriceSimulator({
                       <ServiceIcon
                         service={svc.id}
                         title={isAr ? svc.ar : svc.fr}
-                        className="w-9 h-7 shrink-0"
+                        className="w-12 h-9 shrink-0"
                       />
                       <span className="truncate">{isAr ? svc.ar : svc.fr}</span>
                     </button>

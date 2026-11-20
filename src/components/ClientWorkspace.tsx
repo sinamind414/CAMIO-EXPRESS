@@ -1465,7 +1465,7 @@ export function ClientWorkspace({
                                 : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
                             }`}
                           >
-                            <ServiceIcon service={st} title={isAr ? info.ar : info.fr} className="w-16 h-12 shrink-0" />
+                            <ServiceIcon service={st} title={isAr ? info.ar : info.fr} className="w-20 h-14 shrink-0" />
                             <div className="min-w-0">
                               <div className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">
                                 {isAr ? info.ar : info.fr}
@@ -2712,7 +2712,7 @@ export function ClientWorkspace({
                   <ServiceIcon
                     service={icServiceType}
                     title={isAr ? SERVICE_LABELS[icServiceType].ar : SERVICE_LABELS[icServiceType].fr}
-                    className="w-16 h-11 shrink-0"
+                    className="w-20 h-14 shrink-0"
                   />
                   <div className="min-w-0">
                     <div className="text-xs font-semibold text-slate-900 dark:text-slate-100">
