@@ -21,6 +21,8 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { apiRequest, ApiError } from '../api/client';
 import { wsClient } from '../api/wsClient';
+import { useBackgroundGps } from '../hooks/useBackgroundGps';
+import { computeReliability } from '../domain/trust';
 import { DriverSignup } from './DriverSignup';
 import { ProofOfDeliveryCapture } from './ProofOfDeliveryCapture';
 import { DEFAULT_AUTO_BID_CONFIG, getOfferRetractStatus } from '../domain/autoBid';
@@ -60,6 +62,7 @@ import type {
   Locale,
   Ride,
   SubscriptionPayment,
+  Voucher,
   Wilaya,
 } from '../domain/types';
 import { AutoBidPanel } from './AutoBidPanel';
@@ -78,6 +81,7 @@ interface DriverWorkspaceProps {
   intercityRequests: IntercityRequest[];
   emptyReturns: EmptyReturnDeclaration[];
   payments: SubscriptionPayment[];
+  vouchers?: Voucher[];
   chats: ChatMessage[];
   reviews?: DriverReview[];
   onRefresh: () => Promise<void>;
@@ -94,6 +98,7 @@ export function DriverWorkspace({
   intercityRequests,
   emptyReturns,
   payments,
+  vouchers = [],
   chats,
   reviews = [],
   onRefresh,
@@ -397,6 +402,33 @@ export function DriverWorkspace({
     }
   };
 
+  // File GPS locale + reprise automatique (CDC C3 — réseau dégradé).
+  const gpsTarget = activeDriverRide
+    ? ({ kind: 'ride' as const, id: activeDriverRide.id })
+    : autoStreamIntercityId
+    ? ({ kind: 'intercity' as const, id: autoStreamIntercityId })
+    : null;
+  const sendGpsBatch = async (batch: Array<{ lat: number; lng: number; heading?: number; speedKmh?: number; ts?: string; target: { kind: string; id: string } }>) => {
+    const rideBatch = batch.filter((p) => p.target.kind === 'ride');
+    const icBatch = batch.filter((p) => p.target.kind === 'intercity');
+    let ok = true;
+    for (const [id, positions] of [[rideBatch[0]?.target.id, rideBatch], [icBatch[0]?.target.id, icBatch]] as const) {
+      if (!id || positions.length === 0) continue;
+      const url = positions[0].target.kind === 'ride'
+        ? `/api/v1/rides/${id}/position/batch`
+        : `/api/v1/intercity/requests/${id}/position/batch`;
+      try {
+        await apiRequest(url, { method: 'POST', body: JSON.stringify({ positions: positions.map(({ target: _t, ...p }) => p) }) });
+      } catch { ok = false; }
+    }
+    return ok;
+  };
+  const gps = useBackgroundGps({
+    enabled: autoStreamGps || Boolean(autoStreamIntercityId),
+    target: gpsTarget,
+    sendBatch: sendGpsBatch,
+  });
+
   const [proofPhoto, setProofPhoto] = useState<string>('');
   const [proofRequired, setProofRequired] = useState(false);
 
@@ -649,6 +681,18 @@ export function DriverWorkspace({
             <div>
               <span className="font-semibold text-slate-900 dark:text-slate-100">
                 {isAr ? DRIVER_STATUS_LABELS[driver.status].ar : DRIVER_STATUS_LABELS[driver.status].fr}
+              </span>
+              <span className="mx-1.5">·</span>
+              <span>
+                {isAr ? 'مؤشر الموثوقية:' : 'Fiabilité :'}{' '}
+                <strong className="text-emerald-700 dark:text-emerald-400">
+                  {computeReliability({
+                    ratingAvg: driver.ratingAvg,
+                    ratingsCount: driver.ratingsCount,
+                    responseRate: driver.responseRate ?? 1,
+                    ridesCompleted: driver.ridesCompleted,
+                  }).score}%
+                </strong>
               </span>
               <span className="mx-1.5">·</span>
               <span>
@@ -928,6 +972,28 @@ export function DriverWorkspace({
                       <Navigation className="w-3.5 h-3.5" />
                       <span>{isAr ? 'تحديث الموقع' : 'Avancer GPS'}</span>
                     </button>
+                    <div className="w-full flex flex-wrap items-center gap-2 text-[11px]">
+                      <span className={`inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-full ${
+                        gps.status === 'active' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
+                        : gps.status === 'queued' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
+                        : gps.status === 'offline' ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                      }`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                        {gps.status === 'active' ? (isAr ? 'GPS مباشر' : 'GPS en direct')
+                          : gps.status === 'queued' ? (isAr ? 'قيد الانتظار' : 'En file d’attente')
+                          : gps.status === 'offline' ? (isAr ? 'بدون اتصال' : 'Hors ligne')
+                          : gps.status === 'denied' ? (isAr ? 'موقع مرفوض' : 'Position refusée')
+                          : (isAr ? 'غير مفعّل' : 'Inactif')}
+                      </span>
+                      {gps.queued > 0 && (
+                        <button type="button" onClick={() => void gps.flush()}
+                          className="font-semibold text-orange-700 dark:text-orange-400 hover:underline">
+                          {gps.queued} {isAr ? 'موقع محفوظ → إرسال' : 'position(s) en attente → envoyer'}
+                        </button>
+                      )}
+                      {gps.lastAt && <span className="text-slate-400 tabular-nums">{new Date(gps.lastAt).toLocaleTimeString(locale === 'ar' ? 'ar-DZ' : 'fr-DZ')}</span>}
+                    </div>
                   </div>
                 </div>
 
@@ -1739,6 +1805,13 @@ export function DriverWorkspace({
               <div>
                 {isAr ? 'صالح إلى غاية:' : 'Actif jusqu’au :'}{' '}
                 <strong className="font-mono text-slate-900 dark:text-slate-100">{formatDateDz(driver.subscription.endsOn, locale)}</strong>
+              </div>
+              <div className="pt-1.5 border-t border-slate-200 dark:border-slate-800">
+                {isAr ? 'محفظتك:' : 'Votre portefeuille :'}{' '}
+                <strong className="text-slate-900 dark:text-slate-100">
+                  {driverPayments.length} {isAr ? 'عملية' : 'opération(s)'} · {driverPayments.filter((p) => p.status === 'approved').length}{' '}
+                  {isAr ? 'مدفوعة' : 'validée(s)'} · {vouchers.filter((v) => v.uses > 0).length} {isAr ? 'قسيمة مستخدمة' : 'voucher(s) utilisé(s)'}
+                </strong>
               </div>
             </div>
 

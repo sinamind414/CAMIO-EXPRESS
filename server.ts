@@ -385,6 +385,39 @@ async function startServer() {
     return ride.driverLivePos;
   }
 
+  /** Applique un lot de positions (file GPS locale) en une seule écriture. */
+  function applyRidePositionBatch(
+    rideId: string,
+    positions: Array<{ lat: number; lng: number; heading?: number; speedKmh?: number; ts?: string }>
+  ) {
+    const ride = state.rides.find((r) => r.id === rideId);
+    if (!ride || positions.length === 0) return null;
+    let lastPos: { lat: number; lng: number; heading: number; speedKmh: number; ts: string } | null = null;
+    let trail = [...(ride.driverTrail ?? [])];
+    for (const p of positions) {
+      if (!Number.isFinite(p.lat) || !Number.isFinite(p.lng)) continue;
+      const ts = typeof p.ts === 'string' ? p.ts : new Date().toISOString();
+      lastPos = {
+        lat: p.lat, lng: p.lng,
+        heading: Number.isFinite(p.heading) ? Number(p.heading) : 90,
+        speedKmh: Number.isFinite(p.speedKmh) ? Number(p.speedKmh) : 32,
+        ts,
+      };
+      const previous = trail[trail.length - 1];
+      if (!previous || Math.abs(previous.lat - p.lat) >= 1e-6 || Math.abs(previous.lng - p.lng) >= 1e-6) {
+        trail = [...trail, { lat: p.lat, lng: p.lng, ts }].slice(-25);
+      }
+    }
+    if (!lastPos) return null;
+    ride.driverLivePos = lastPos;
+    ride.driverTrail = trail;
+    const driver = state.drivers.find((d) => d.id === ride.driverId);
+    if (driver) { driver.lat = lastPos.lat; driver.lng = lastPos.lng; }
+    persistState();
+    broadcast('driver.position', { rideId: ride.id, pos: lastPos, trail });
+    return lastPos;
+  }
+
   function applyIntercityPositionUpdate(
     intercityId: string,
     lat: number,
@@ -1054,6 +1087,16 @@ async function startServer() {
     res.json({ ride });
   });
 
+  app.post('/api/v1/rides/:id/position/batch', (req, res) => {
+    const positions = Array.isArray(req.body?.positions) ? req.body.positions : [];
+    if (positions.length === 0 || positions.length > 200) {
+      return sendError(res, 400, 'VALIDATION_ERROR', '1 à 200 positions requises.', 'مطلوب من 1 إلى 200 موقع.');
+    }
+    const pos = applyRidePositionBatch(req.params.id, positions);
+    if (!pos) return sendError(res, 404, 'NOT_FOUND', 'Course introuvable.', 'الرحلة غير موجودة.');
+    res.json({ ok: true, pos, applied: positions.length });
+  });
+
   app.post('/api/v1/rides/:id/position', (req, res) => {
     const pos = applyRidePositionUpdate(
       req.params.id,
@@ -1600,8 +1643,8 @@ async function startServer() {
   app.post('/api/v1/driver/:id/documents/submit', requireAuth(['driver']), (req, res) => {
     const driver = state.drivers.find((d) => d.id === req.params.id);
     if (!driver) return sendError(res, 404, 'NOT_FOUND', 'Chauffeur introuvable.', 'السائق غير موجود.');
-    if (driver.documents.length < 4) {
-      return sendError(res, 422, 'DOSSIER_INCOMPLET', '4 documents obligatoires requis.', '4 وثائق إلزامية مطلوبة.');
+    if (driver.documents.length < 5) {
+      return sendError(res, 422, 'DOSSIER_INCOMPLET', '5 documents obligatoires requis (dont le selfie).', '5 وثائق إلزامية مطلوبة (بما فيها السيلفي).');
     }
     driver.status = 'pending_review';
     persistState();
@@ -2230,6 +2273,20 @@ async function startServer() {
     persistState();
     broadcast('intercity.updated', ic);
     res.json({ intercity: ic });
+  });
+
+  app.post('/api/v1/intercity/requests/:id/position/batch', (req, res) => {
+    const positions = Array.isArray(req.body?.positions) ? req.body.positions : [];
+    if (positions.length === 0 || positions.length > 200) {
+      return sendError(res, 400, 'VALIDATION_ERROR', '1 à 200 positions requises.', 'مطلوب من 1 إلى 200 موقع.');
+    }
+    let last = null;
+    for (const p of positions) {
+      const r = applyIntercityPositionUpdate(req.params.id, Number(p.lat), Number(p.lng), Number(p.heading ?? 90), Number(p.speedKmh ?? 76));
+      if (r) last = r;
+    }
+    if (!last) return sendError(res, 404, 'NOT_FOUND', 'Trajet introuvable.', 'الرحلة غير موجودة.');
+    res.json({ ok: true, pos: last, applied: positions.length });
   });
 
   app.post('/api/v1/intercity/requests/:id/position', (req, res) => {

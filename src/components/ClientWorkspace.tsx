@@ -82,6 +82,8 @@ import { LiveTrackingMap } from './LiveTrackingMap';
 import { QuickIncidentPanel, type QuickIncidentSubmitPayload } from './QuickIncidentPanel';
 import { RouteMapPreview } from './RouteMapPreview';
 import { QuickRequest } from './QuickRequest';
+import { ReliabilityBadge } from './ReliabilityBadge';
+import { computeReliability } from '../domain/trust';
 import { LocationPinPicker } from './LocationPinPicker';
 import { SERVICE_VEHICLES, defaultVehicleForService, vehiclesForService } from '../domain/serviceVehicles';
 import { VehicleIcon } from './VehicleIcon';
@@ -1360,11 +1362,22 @@ export function ClientWorkspace({
                   ))}
                 </select>
                 {preferredDriver && (
-                  <p data-testid="urban-preferred-driver-banner" className="text-[11px] text-rose-900 dark:text-rose-200">
-                    {isAr
-                      ? `سيتم إبراز هذا الطلب للسائق المفضل ${preferredDriver.fullName}.`
-                      : `Demande marquée prioritaire pour votre favori ${preferredDriver.fullName}.`}
-                  </p>
+                  <div className="space-y-1.5">
+                    <p data-testid="urban-preferred-driver-banner" className="text-[11px] text-rose-900 dark:text-rose-200">
+                      {isAr
+                        ? `سيتم إبراز هذا الطلب للسائق المفضل ${preferredDriver.fullName}.`
+                        : `Demande marquée prioritaire pour votre favori ${preferredDriver.fullName}.`}
+                    </p>
+                    <ReliabilityBadge
+                      info={computeReliability({
+                        ratingAvg: preferredDriver.ratingAvg,
+                        ratingsCount: preferredDriver.ratingsCount,
+                        responseRate: preferredDriver.responseRate ?? 1,
+                        ridesCompleted: preferredDriver.ridesCompleted,
+                      })}
+                      locale={locale}
+                    />
+                  </div>
                 )}
               </div>
             ) : (

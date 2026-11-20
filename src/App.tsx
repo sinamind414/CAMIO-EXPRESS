@@ -7,6 +7,7 @@ import { CamioLogo } from './components/CamioLogo';
 import { ClientWorkspace } from './components/ClientWorkspace';
 import { DriverWorkspace } from './components/DriverWorkspace';
 import { HelpCenter } from './components/HelpCenter';
+import { RoleSelection } from './components/RoleSelection';
 import { ToastContainer } from './components/ToastContainer';
 import { TEXTS } from './domain/i18n';
 import {
@@ -41,6 +42,11 @@ export default function App() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [sessionRole, setSessionRole] = useState<'client' | 'driver' | 'admin' | null>(null);
+  // Écran d'accueil « Qui êtes-vous ? » (persisté localement).
+  const [roleSelected, setRoleSelected] = useState<'client' | 'driver' | null>(() => {
+    if (typeof window === 'undefined') return 'client';
+    return (window.localStorage.getItem('camio_role') as 'client' | 'driver' | null) ?? null;
+  });
 
   const handleToggleTheme = useCallback(() => {
     setTheme((prev) => toggleThemeMode(prev));
@@ -180,6 +186,28 @@ export default function App() {
 
   const t = TEXTS[locale];
 
+  // Écran d'accueil : choix du rôle au premier lancement.
+  if (!roleSelected) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+        <div className="flex justify-end p-4">
+          <button type="button" onClick={() => setLocale((l) => (l === 'fr' ? 'ar' : 'fr'))}
+            className="h-9 px-3 rounded-md bg-brand-700 text-white text-xs font-semibold">
+            {locale === 'fr' ? 'العربية' : 'Français'}
+          </button>
+        </div>
+        <RoleSelection
+          locale={locale}
+          onChoose={(role) => {
+            window.localStorage.setItem('camio_role', role);
+            setRoleSelected(role);
+            setWorkspace(role);
+          }}
+        />
+      </div>
+    );
+  }
+
   const isDark = theme === 'dark';
 
   return (
@@ -304,6 +332,7 @@ export default function App() {
                 intercityRequests={data.intercityRequests}
                 emptyReturns={data.emptyReturns}
                 payments={data.payments}
+                vouchers={data.vouchers}
                 chats={data.chats}
                 reviews={data.reviews}
                 onRefresh={fetchBootstrap}

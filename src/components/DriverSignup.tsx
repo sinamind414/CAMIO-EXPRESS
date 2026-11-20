@@ -2,6 +2,7 @@ import { ArrowRight, BadgeCheck, Camera, Check, IdCard, Phone, Truck } from 'luc
 import { useState } from 'react';
 import { apiRequest } from '../api/client';
 import { VEHICLE_CATEGORIES } from '../domain/seedData';
+import { VEHICLE_BRANDS } from '../domain/trust';
 import { VEHICLE_LABELS } from '../domain/i18n';
 import type { Locale, VehicleCategory } from '../domain/types';
 import { VehicleIcon } from './VehicleIcon';
@@ -18,6 +19,7 @@ const KYC = [
   { key: 'vehicle_registration', fr: 'Carte grise', ar: 'بطاقة رمادية', icon: BadgeCheck },
   { key: 'insurance', fr: 'Assurance véhicule', ar: 'تأمين المركبة', icon: BadgeCheck },
   { key: 'vehicle_photo_plate', fr: 'Photo du véhicule + plaque', ar: 'صورة المركبة واللوحة', icon: Camera },
+  { key: 'national_id', fr: 'Selfie + pièce d’identité', ar: 'سيلفي + بطاقة التعريف', icon: IdCard },
 ] as const;
 
 /** Parcours d'inscription chauffeur en 4 écrans. */
@@ -119,8 +121,11 @@ export function DriverSignup({ locale, wilayas, onDone, onCancel }: Props) {
             ))}
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder={isAr ? 'الماركة' : 'Marque (ex. Hyundai)'}
-              className="w-full h-10 px-3 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-sm" />
+            <select value={brand} onChange={(e) => setBrand(e.target.value)}
+              className="w-full h-10 px-3 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-sm">
+              <option value="">{isAr ? 'الماركة' : 'Marque du véhicule'}</option>
+              {VEHICLE_BRANDS.map((b) => <option key={b} value={b}>{b}</option>)}
+            </select>
             <input value={plate} onChange={(e) => setPlate(e.target.value)} placeholder={isAr ? 'رقم اللوحة' : 'Plaque (ex. 04521-118-31)'}
               className="w-full h-10 px-3 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-sm" />
           </div>
@@ -140,7 +145,7 @@ export function DriverSignup({ locale, wilayas, onDone, onCancel }: Props) {
         <div className="space-y-3">
           <div className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <span className="w-6 h-6 rounded-full bg-orange-600 text-white text-xs inline-flex items-center justify-center">3</span>
-            {isAr ? 'وثائقك (4 مطلوبة)' : 'Vos documents (4 requis)'}
+            {isAr ? 'وثائقك (5 مطلوبة)' : 'Vos documents (5 requis)'}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {KYC.map((d) => {
@@ -160,7 +165,7 @@ export function DriverSignup({ locale, wilayas, onDone, onCancel }: Props) {
             <button type="button" onClick={() => setStep(1)} className="h-11 px-4 rounded-lg border border-slate-300 dark:border-slate-700 text-sm">
               {isAr ? 'رجوع' : 'Retour'}
             </button>
-            <button type="button" onClick={() => setStep(3)} disabled={docs.length < 4}
+            <button type="button" onClick={() => setStep(3)} disabled={docs.length < 5}
               className="flex-1 h-11 rounded-lg bg-orange-600 text-white text-sm font-bold disabled:opacity-50">
               {isAr ? 'متابعة' : 'Continuer'}
             </button>

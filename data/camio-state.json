@@ -1643,7 +1643,19 @@
           "fromWilaya": 31,
           "toWilaya": null
         }
-      ]
+      ],
+      "autoBidConfig": {
+        "enabled": false,
+        "ratePerKmDzd": 1400,
+        "minFloorPriceDzd": 12000,
+        "maxDistanceKm": 35,
+        "serviceTypes": [
+          "moving",
+          "freight"
+        ],
+        "acceptSmallerLoads": true,
+        "message": "Offre automatique · Disponible immédiatement"
+      }
     },
     {
       "id": "drv-karim",
@@ -1653,8 +1665,8 @@
       "status": "approved",
       "bio": "Spécialiste déménagement Oran & axe Ouest–Centre depuis 8 ans.",
       "isOnline": true,
-      "lat": 35.6982,
-      "lng": -0.6295,
+      "lat": 35.699,
+      "lng": -0.629,
       "ratingAvg": 4.85,
       "ratingsCount": 64,
       "ratingIntercityAvg": 4.9,
@@ -1664,8 +1676,8 @@
       "ridesCompleted": 112,
       "ridesCancelled": 1,
       "acceptanceRate": 0.94,
-      "requestsReceivedCount": 48,
-      "requestsRespondedCount": 45,
+      "requestsReceivedCount": 49,
+      "requestsRespondedCount": 46,
       "ignoredRequestsStreak": 0,
       "responseRate": 0.94,
       "isDemotedInBroadcast": false,
@@ -1969,6 +1981,114 @@
     }
   ],
   "rides": [
+    {
+      "id": "ride-1795161376552",
+      "rideCode": "LM-2026-004514",
+      "clientId": "client-amine",
+      "clientName": "Amine Boudiaf",
+      "clientPhone": "+213551889900",
+      "vehicleCategory": "van",
+      "serviceType": "moving",
+      "status": "assigned",
+      "wilayaCode": 31,
+      "pickup": {
+        "address": "Oran",
+        "lat": 35.6971,
+        "lng": -0.6308
+      },
+      "dropoff": {
+        "address": "Senia",
+        "lat": 35.6479,
+        "lng": -0.6217
+      },
+      "distanceKm": 7.5,
+      "floorFrom": 0,
+      "floorTo": 0,
+      "hasElevatorFrom": false,
+      "hasElevatorTo": false,
+      "portersCount": 1,
+      "hasFragileItems": false,
+      "needsDisassembly": false,
+      "volumeNote": "",
+      "clientComment": "",
+      "photos": [
+        "x.jpg"
+      ],
+      "hasVoiceNote": false,
+      "estimatedPriceDzd": 9000,
+      "priceFloorDzd": 7500,
+      "priceCapDzd": 22500,
+      "notifiedDriversCount": 2,
+      "searchExpiresAt": "2026-11-20T08:11:16.552Z",
+      "createdAt": "2026-11-20T07:56:16.552Z",
+      "offers": [
+        {
+          "id": "off-1795161376642-hoy5",
+          "rideId": "ride-1795161376552",
+          "driverId": "drv-karim",
+          "driverName": "Karim Benali",
+          "driverRating": 4.85,
+          "driverRidesCompleted": 112,
+          "vehicleCategory": "medium_truck",
+          "vehicleLabel": "Hyundai HD65 (3,5 t)",
+          "plateMasked": "04521-***-31",
+          "priceDzd": 16000,
+          "etaMinutes": 12,
+          "portersOffered": 1,
+          "message": "",
+          "status": "accepted",
+          "isAutoBid": false,
+          "retractableUntil": "2026-11-20T07:59:16.642Z",
+          "createdAt": "2026-11-20T07:56:16.642Z"
+        }
+      ],
+      "events": [
+        {
+          "id": "ev-1795161376552",
+          "fromStatus": null,
+          "toStatus": "searching",
+          "actor": "client",
+          "note": "Demande publiée (2 chauffeurs notifiés)",
+          "createdAt": "2026-11-20T07:56:16.552Z"
+        },
+        {
+          "id": "ev-1795161376656",
+          "fromStatus": "searching",
+          "toStatus": "assigned",
+          "actor": "client",
+          "note": "Offre acceptée : Karim Benali (16000 DA)",
+          "createdAt": "2026-11-20T07:56:16.656Z"
+        }
+      ],
+      "driverId": "drv-karim",
+      "driverName": "Karim Benali",
+      "driverPhone": "+213661234567",
+      "finalAgreedPriceDzd": 16000,
+      "driverLivePos": {
+        "lat": 35.699,
+        "lng": -0.629,
+        "heading": 95,
+        "speedKmh": 34,
+        "ts": "2026-11-20T10:00:10Z"
+      },
+      "driverTrail": [
+        {
+          "lat": 35.6982,
+          "lng": -0.6295,
+          "ts": "2026-11-20T07:56:16.656Z"
+        },
+        {
+          "lat": 35.698,
+          "lng": -0.63,
+          "ts": "2026-11-20T10:00:00Z"
+        },
+        {
+          "lat": 35.699,
+          "lng": -0.629,
+          "ts": "2026-11-20T10:00:10Z"
+        }
+      ]
+    },
     {
       "id": "ride-1795116287950",
       "rideCode": "LM-2026-004513",
@@ -2607,6 +2727,6 @@
       "createdAt": "2026-10-15T11:30:00Z"
     }
   ],
-  "rideCounter": 4514,
+  "rideCounter": 4515,
   "intercityCounter": 1205
 }
