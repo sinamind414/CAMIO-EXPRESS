@@ -215,6 +215,7 @@ export default function App() {
         </div>
         <RoleSelection
           locale={locale}
+          theme={theme}
           onChoose={(role) => {
             window.localStorage.setItem('camio_role', role);
             setRoleSelected(role);
