@@ -13,6 +13,7 @@ import {
   Phone,
   RotateCcw,
   ShieldCheck,
+  Sparkles,
   Sun,
   Ticket,
   Truck,
@@ -44,6 +45,7 @@ import {
   VEHICLE_LABELS,
 } from '../domain/i18n';
 import { computeSubscriptionStatus } from '../domain/stateMachine';
+import { getDriverTier } from '../domain/visibility';
 import {
   computeNextStepTowardsTarget,
   isOngoingTrackableIntercity,
@@ -157,6 +159,24 @@ export function DriverWorkspace({
     () => computeSubscriptionStatus(driver.subscription, todayStr),
     [driver.subscription, todayStr]
   );
+
+  // Modèle « visibilité » : le tier Pro est un boost d'annuaire, pas une condition
+  // pour recevoir des courses. Le gratuit reste toujours actif (règle n°1).
+  const tier = useMemo(
+    () => getDriverTier(driver, settings, todayStr),
+    [driver, settings, todayStr]
+  );
+
+  const planLabel = useMemo(() => {
+    const paidPlan = driver.subscription.kind !== 'trial';
+    if (!paidPlan) return isAr ? 'مجاني' : 'Gratuit';
+    if (subComputed.status === 'grace') return isAr ? 'برو (فترة سماح)' : 'Pro (en grâce)';
+    if (subComputed.status === 'active') {
+      const shortEnd = `${driver.subscription.endsOn.slice(8, 10)}/${driver.subscription.endsOn.slice(5, 7)}`;
+      return isAr ? `برو (نشط — ينتهي في ${shortEnd})` : `Pro (actif — expire le ${shortEnd})`;
+    }
+    return isAr ? 'برو (منتهي)' : 'Pro (expiré)';
+  }, [driver.subscription.kind, driver.subscription.endsOn, subComputed.status, isAr]);
 
   const intercityUrbanBlock = useMemo(
     () => isDriverBlockedByIntercity(driver.id, intercityRequests, todayStr, settings),
@@ -520,7 +540,7 @@ export function DriverWorkspace({
         method: 'POST',
         body: JSON.stringify({
           method: payMethod,
-          amountDzd: settings.subscriptionPriceDzd,
+          amountDzd: settings.proPriceDzd,
           reference: payRef,
           proofLabel: payProof,
         }),
@@ -696,7 +716,7 @@ export function DriverWorkspace({
               </span>
               <span className="mx-1.5">·</span>
               <span>
-                {isAr ? 'الاشتراك:' : 'Abonnement :'}{' '}
+                {isAr ? 'الخطة:' : 'Plan :'}{' '}
                 <strong
                   className={
                     subComputed.status === 'expired'
@@ -706,9 +726,13 @@ export function DriverWorkspace({
                       : 'text-emerald-700 dark:text-emerald-400'
                   }
                 >
-                  {isAr ? SUB_STATUS_LABELS[subComputed.status].ar : SUB_STATUS_LABELS[subComputed.status].fr}
-                </strong>{' '}
-                ({subComputed.daysLeft} j)
+                  {planLabel}
+                </strong>
+                {tier === 'pro' && (
+                  <span className="ms-1.5 px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 font-black text-[9px]">
+                    PRO
+                  </span>
+                )}
               </span>
             </div>
             <div className="tabular-nums">
@@ -794,14 +818,16 @@ export function DriverWorkspace({
           <span>
             {isAr
               ? 'اشتراكك في فترة السماح (3 أيام). قم بالتجديد لتجنب توقف استقبال الطلبات.'
-              : `Attention : votre abonnement est en période de grâce jusqu’au ${formatDateDz(driver.subscription.graceUntil, locale)}.`}
+              : `Votre plan Pro est en période de grâce jusqu’au ${formatDateDz(driver.subscription.graceUntil, locale)}. Vous recevez toujours des courses ; seul votre rang dans l’annuaire est concerné.`}
           </span>
           <button
             type="button"
             onClick={() => setTab('subscription')}
             className="px-3 py-1.5 rounded bg-amber-700 hover:bg-amber-600 text-white font-semibold whitespace-nowrap"
           >
-            {isAr ? 'تجديد الآن' : 'Renouveler (1 000 DA)'}
+            {isAr
+              ? `التجديد (${formatDzd(settings.proPriceDzd, locale)})`
+              : `Renouveler (${formatDzd(settings.proPriceDzd, locale)})`}
           </button>
         </div>
       )}
@@ -1770,15 +1796,73 @@ export function DriverWorkspace({
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                  {isAr ? 'اشتراك السائق (0% عمولة)' : 'Abonnement chauffeur · 0 % commission'}
+                  {isAr ? 'خطة الظهور (0% عمولة)' : 'Visibilité Pro · 0 % commission'}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  {formatDzd(settings.subscriptionPriceDzd, locale)} / 30 {isAr ? 'يوم' : 'jours'}
+                  {formatDzd(settings.proPriceDzd, locale)} / 30 {isAr ? 'يوم' : 'jours'}
+                  {' · '}
+                  {isAr ? 'تظهر أولاً في الدليل فقط' : 'Apparaissez en premier dans l’annuaire'}
                 </p>
               </div>
               <span className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-slate-100">
                 {subComputed.daysLeft} j
               </span>
+            </div>
+
+            {/* Statut du plan + preuve de valeur (conversion) */}
+            <div className="p-3.5 rounded-lg border border-purple-200 dark:border-purple-900/60 bg-purple-50/60 dark:bg-purple-950/20 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-purple-700 dark:text-purple-400 shrink-0" />
+                  <span className="text-xs font-bold text-purple-900 dark:text-purple-200">{planLabel}</span>
+                </div>
+                {tier === 'pro' ? (
+                  <span className="px-2 py-0.5 rounded bg-purple-600 text-white font-black text-[10px]">PRO</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('pro-payment-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-orange-600 text-white text-[11px] font-bold hover:bg-orange-700"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {isAr ? 'كن برو' : 'Passer Pro'}
+                    <span className="opacity-90">· {formatDzd(settings.proPriceDzd, locale)}</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Panneau de preuve — compteurs existants, aucun nouveau tracking */}
+              <div data-testid="driver-proof-panel" className="grid grid-cols-3 gap-2 border-t border-purple-200/70 dark:border-purple-800/60 pt-3">
+                <div className="text-center">
+                  <div className="text-base font-black text-purple-900 dark:text-purple-200 tabular-nums">
+                    {driver.requestsReceivedCount ?? 0}
+                  </div>
+                  <div className="text-[10px] text-purple-800/80 dark:text-purple-300/80 leading-tight">
+                    {isAr ? 'طلبات مستلمة' : 'demandes reçues'}
+                  </div>
+                </div>
+                <div className="text-center border-x border-purple-200/70 dark:border-purple-800/60">
+                  <div className="text-base font-black text-purple-900 dark:text-purple-200 tabular-nums">
+                    {driver.ridesCompleted ?? 0}
+                  </div>
+                  <div className="text-[10px] text-purple-800/80 dark:text-purple-300/80 leading-tight">
+                    {isAr ? 'رحلات منجزة' : 'courses'}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-base font-black text-purple-900 dark:text-purple-200 tabular-nums">
+                    {(driver.ratingAvg ?? 0) > 0 ? driver.ratingAvg.toFixed(1) : '—'}<span className="text-[11px]">/5</span>
+                  </div>
+                  <div className="text-[10px] text-purple-800/80 dark:text-purple-300/80 leading-tight">
+                    {isAr ? 'التقييم' : 'note'}
+                  </div>
+                </div>
+              </div>
+              <p className="text-[10px] text-purple-800/70 dark:text-purple-300/70">
+                {isAr
+                  ? 'هذه أرقام ملفك الحقيقية. الخطة لا تغير استقبال الطلبات، بل ترتيبك في الدليل.'
+                  : 'Ce sont les chiffres réels de votre profil. Le plan ne change pas la réception des courses, seulement votre rang dans l’annuaire.'}
+              </p>
             </div>
 
             <div className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -1865,7 +1949,7 @@ export function DriverWorkspace({
           </section>
 
           <section className="lg:col-span-7 space-y-5">
-            <form onSubmit={handleSubmitPayment} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 space-y-4">
+            <form id="pro-payment-form" onSubmit={handleSubmitPayment} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 space-y-4">
               <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
                 {isAr ? 'إرسال وصل الدفع' : 'Envoyer un justificatif BaridiMob / CCP'}
               </h3>
@@ -1914,7 +1998,11 @@ export function DriverWorkspace({
                 className="h-10 px-5 rounded-md bg-orange-600 text-white text-xs font-semibold hover:bg-orange-700 inline-flex items-center gap-2"
               >
                 <CreditCard className="w-4 h-4" />
-                <span>{isAr ? 'إرسال للمراجعة' : 'Soumettre le justificatif (1 000 DA)'}</span>
+                <span>
+                  {isAr
+                    ? `إرسال للمراجعة (${formatDzd(settings.proPriceDzd, locale)})`
+                    : `Soumettre le justificatif (${formatDzd(settings.proPriceDzd, locale)})`}
+                </span>
               </button>
             </form>
 
