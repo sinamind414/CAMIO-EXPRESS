@@ -17,6 +17,7 @@ import {
   type SessionIdentity,
 } from './src/domain/security';
 import { buildDriverProfile } from './src/domain/driverOnboarding';
+import { canDriverReceiveRides, rankDirectory } from './src/domain/visibility';
 import {
   estimateIntercityReference,
   estimateUrbanRide,
@@ -171,6 +172,8 @@ function loadState(): AppState {
           ...(parsed.settings ?? {}),
           // Compat arrière-plan : les anciens fichiers sans ces clés obtiennent les défauts.
           proPriceDzd: Number(parsed.settings?.proPriceDzd ?? SEED_SETTINGS.proPriceDzd),
+          // Champ historique conservé mais aligné sur le prix Pro (une seule source de vérité).
+          subscriptionPriceDzd: Number(parsed.settings?.proPriceDzd ?? SEED_SETTINGS.proPriceDzd),
           freeTierEnabled: parsed.settings?.freeTierEnabled ?? SEED_SETTINGS.freeTierEnabled,
           hideUnpaidProfiles: parsed.settings?.hideUnpaidProfiles ?? SEED_SETTINGS.hideUnpaidProfiles,
         };
@@ -253,7 +256,8 @@ function syncDriverSubscriptions() {
   for (const d of state.drivers) {
     const computed = computeSubscriptionStatus(d.subscription, today);
     d.subscription.status = computed.status;
-    if (!computed.canReceiveRides) {
+    // Modèle visibilité : un chauffeur gratuit reste en ligne même hors période payante.
+    if (!canDriverReceiveRides(d, state.settings, today)) {
       d.isOnline = false;
     }
   }
@@ -526,6 +530,8 @@ async function startServer() {
     syncDriverSubscriptions();
     res.json({
       ...state,
+      // Annuaire client : masquage optionnel + Pro devant Free (jamais le broadcast).
+      drivers: rankDirectory(state.drivers, state.settings),
       rides: state.rides.map(sanitizeRideForApi),
       intercityRequests: state.intercityRequests.map(sanitizeIntercityForApi),
     });
@@ -713,8 +719,7 @@ async function startServer() {
     const eligibleDrivers = state.drivers
       .filter((d) => {
         if (d.status !== 'approved' || !d.isOnline) return false;
-        const sub = computeSubscriptionStatus(d.subscription, today);
-        if (!sub.canReceiveRides) return false;
+        if (!canDriverReceiveRides(d, state.settings, today)) return false;
         // CDC v2.1 §6.5 / T25: block drivers booked on intercity within ±intercityDriverBlockHours
         if (isDriverBlockedByIntercity(d.id, state.intercityRequests, today, state.settings).blocked) {
           return false;
@@ -873,8 +878,7 @@ async function startServer() {
 
     syncDriverSubscriptions();
     const today = todayIso();
-    const sub = computeSubscriptionStatus(driver.subscription, today);
-    if (driver.status !== 'approved' || !sub.canReceiveRides) {
+    if (driver.status !== 'approved' || !canDriverReceiveRides(driver, state.settings, today)) {
       return sendError(
         res,
         403,
@@ -1501,8 +1505,7 @@ async function startServer() {
         );
       }
       syncDriverSubscriptions();
-      const sub = computeSubscriptionStatus(driver.subscription, todayIso());
-      if (!sub.canReceiveRides) {
+      if (!canDriverReceiveRides(driver, state.settings, todayIso())) {
         return sendError(
           res,
           403,
@@ -1589,13 +1592,12 @@ async function startServer() {
     const autoBidsCreated: unknown[] = [];
     syncDriverSubscriptions();
     const today = todayIso();
-    const sub = computeSubscriptionStatus(driver.subscription, today);
     const blockedByIc = isDriverBlockedByIntercity(driver.id, state.intercityRequests, today, state.settings).blocked;
     if (
       driver.autoBidConfig.enabled &&
       driver.status === 'approved' &&
       driver.isOnline &&
-      sub.canReceiveRides &&
+      canDriverReceiveRides(driver, state.settings, today) &&
       !blockedByIc
     ) {
       for (const ride of state.rides) {
