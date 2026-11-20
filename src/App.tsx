@@ -8,6 +8,7 @@ import { ClientWorkspace } from './components/ClientWorkspace';
 import { DriverWorkspace } from './components/DriverWorkspace';
 import { HelpCenter } from './components/HelpCenter';
 import { RoleSelection } from './components/RoleSelection';
+import { SplashScreen } from './components/SplashScreen';
 import { ToastContainer } from './components/ToastContainer';
 import { TEXTS } from './domain/i18n';
 import {
@@ -186,10 +187,26 @@ export default function App() {
 
   const t = TEXTS[locale];
 
+  const [splashVisible, setSplashVisible] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.sessionStorage.getItem('camio_splash_seen') !== '1';
+  });
+
+  const splash = splashVisible ? (
+    <SplashScreen
+      locale={locale}
+      onDone={() => {
+        window.sessionStorage.setItem('camio_splash_seen', '1');
+        setSplashVisible(false);
+      }}
+    />
+  ) : null;
+
   // Écran d'accueil : choix du rôle au premier lancement.
   if (!roleSelected) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+        {splash}
         <div className="flex justify-end p-4">
           <button type="button" onClick={() => setLocale((l) => (l === 'fr' ? 'ar' : 'fr'))}
             className="h-9 px-3 rounded-md bg-brand-700 text-white text-xs font-semibold">
@@ -212,6 +229,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col pb-[72px] bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+      {splash}
       {/* 3-Zone Top Bar Contract */}
       <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xs border-t-[3px] border-t-brand-700 dark:border-t-brand-500 border-b border-slate-200 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-2.5 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-8">
