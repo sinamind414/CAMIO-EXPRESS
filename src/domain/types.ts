@@ -556,7 +556,13 @@ export interface PricingRule {
 }
 
 export interface AppSettings {
+  /** Prix du tier Pro (ex-« abonnement chauffeur »). Le champ historique est conservé. */
   subscriptionPriceDzd: number;
+  proPriceDzd: number;
+  /** Modèle « visibilité » : le chauffeur gratuit reste toujours visible et recevable. */
+  freeTierEnabled: boolean;
+  /** Masquage dur des profils Pro expirés — DÉSACTIVÉ par défaut (décision admin future). */
+  hideUnpaidProfiles: boolean;
   trialDays: number;
   graceDays: number;
   radiusKmDefault: number;

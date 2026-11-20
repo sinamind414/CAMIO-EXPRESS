@@ -169,6 +169,10 @@ function loadState(): AppState {
         const mergedSettings: AppSettings = {
           ...structuredClone(SEED_SETTINGS),
           ...(parsed.settings ?? {}),
+          // Compat arrière-plan : les anciens fichiers sans ces clés obtiennent les défauts.
+          proPriceDzd: Number(parsed.settings?.proPriceDzd ?? SEED_SETTINGS.proPriceDzd),
+          freeTierEnabled: parsed.settings?.freeTierEnabled ?? SEED_SETTINGS.freeTierEnabled,
+          hideUnpaidProfiles: parsed.settings?.hideUnpaidProfiles ?? SEED_SETTINGS.hideUnpaidProfiles,
         };
         const normalizedDrivers = parsed.drivers.map((d) => {
           const requestsReceivedCount = Number(d.requestsReceivedCount ?? 0);

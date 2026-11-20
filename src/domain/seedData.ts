@@ -41,7 +41,10 @@ export function buildRefPrices(scale = 1): Record<VehicleCategory, number> {
 export { SEED_WILAYAS } from './wilayas';
 
 export const SEED_SETTINGS: AppSettings = {
-  subscriptionPriceDzd: 1000,
+  subscriptionPriceDzd: 800,
+  proPriceDzd: 800,
+  freeTierEnabled: true,
+  hideUnpaidProfiles: false,
   trialDays: 30,
   graceDays: 3,
   radiusKmDefault: 15,
