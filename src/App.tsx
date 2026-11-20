@@ -403,7 +403,9 @@ export default function App() {
           </span>
           <div className="flex flex-wrap items-center gap-3">
             <span>
-              {locale === 'ar' ? 'دفع نقدي مباشر · اشتراك شهري للسائقين' : 'Paiement cash direct · Abonnement chauffeur 1 000 DA/mois'}
+              {locale === 'ar'
+                ? `دفع نقدي مباشر · برو ${data?.settings?.proPriceDzd ?? 800} دج/شهر (اختياري)`
+                : `Paiement cash direct · Pro ${data?.settings?.proPriceDzd ?? 800} DA/mois (optionnel)`}
             </span>
             <button
               type="button"

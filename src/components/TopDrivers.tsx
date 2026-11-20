@@ -108,7 +108,7 @@ export function TopDrivers({
             >
               <span className="absolute -top-2 -left-1 text-xl" aria-hidden="true">{MEDALS[i]}</span>
               <div className="flex items-start gap-2">
-                <VehicleIcon category={d.vehicle.category} className="w-16 h-12 shrink-0" />
+                <VehicleIcon category={d.vehicle.category} className="w-20 h-14 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                     {d.fullName}

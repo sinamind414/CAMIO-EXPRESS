@@ -113,7 +113,7 @@ export function DriverSignup({ locale, wilayas, onDone, onCancel }: Props) {
             {VEHICLE_CATEGORIES.map((vc) => (
               <button key={vc} type="button" onClick={() => setCategory(vc)}
                 className={`p-2 rounded-lg border flex flex-col items-center gap-1 ${category === vc ? 'border-orange-600 bg-orange-50 dark:bg-orange-950/30' : 'border-slate-200 dark:border-slate-700'}`}>
-                <VehicleIcon category={vc} className="w-16 h-12" />
+                <VehicleIcon category={vc} className="w-20 h-14" />
                 <span className="text-[10px] font-semibold text-slate-800 dark:text-slate-100 text-center leading-tight">
                   {isAr ? VEHICLE_LABELS[vc].ar : VEHICLE_LABELS[vc].fr}
                 </span>

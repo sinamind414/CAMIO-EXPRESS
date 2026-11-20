@@ -683,7 +683,7 @@ export function DynamicPriceSimulator({
                 <VehicleIcon
                   category={simulation.recommendation.vehicleCategory}
                   title={isAr ? recVehicle.ar : recVehicle.fr}
-                  className="w-16 h-12 text-brand-700 dark:text-brand-300 shrink-0"
+                  className="w-20 h-14 text-brand-700 dark:text-brand-300 shrink-0"
                 />
                 <div className="flex-1 min-w-0 space-y-1.5">
                   <div className="flex items-center justify-between gap-2 text-xs">

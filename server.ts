@@ -1697,13 +1697,13 @@ async function startServer() {
     }
 
     const reference = String(req.body.reference ?? '').trim();
-    const amountDzd = Number(req.body.amountDzd ?? state.settings.subscriptionPriceDzd);
-    if (!reference || amountDzd < state.settings.subscriptionPriceDzd) {
+    const amountDzd = Number(req.body.amountDzd ?? state.settings.proPriceDzd);
+    if (!reference || amountDzd < state.settings.proPriceDzd) {
       return sendError(
         res,
         400,
         'VALIDATION_ERROR',
-        `Référence requise et montant minimum de ${state.settings.subscriptionPriceDzd} DA.`,
+        `Référence requise et montant minimum de ${state.settings.proPriceDzd} DA.`,
         'رقم المرجع والمبلغ الصحيح مطلوبان.'
       );
     }
@@ -1754,7 +1754,7 @@ async function startServer() {
       startsOn: ext.startsOn,
       endsOn: ext.endsOn,
       graceUntil: ext.graceUntil,
-      amountDzd: state.settings.subscriptionPriceDzd,
+      amountDzd: state.settings.proPriceDzd,
     };
 
     state.payments.unshift({
@@ -1762,7 +1762,7 @@ async function startServer() {
       driverId: driver.id,
       driverName: driver.fullName,
       method: 'voucher',
-      amountDzd: state.settings.subscriptionPriceDzd,
+      amountDzd: state.settings.proPriceDzd,
       status: 'approved',
       reference: voucher.code,
       proofLabel: `Voucher ${voucher.code}`,

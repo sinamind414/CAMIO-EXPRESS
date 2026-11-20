@@ -101,7 +101,7 @@ export function QuickRequest({ locale, wilayas, onPublish, onAdvanced }: Props) 
             {QUICK_PRESETS.filter((p) => p.service === service).map((p) => (
               <button key={p.labelFr} type="button" onClick={() => choosePreset(p)}
                 className="p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-orange-500 hover:bg-orange-50/50 dark:hover:bg-orange-950/20 flex items-center gap-3 text-start">
-                <VehicleIcon category={p.vehicle} className="w-16 h-12 shrink-0" />
+                <VehicleIcon category={p.vehicle} className="w-20 h-14 shrink-0" />
                 <span className="text-xs font-semibold text-slate-800 dark:text-slate-100">
                   {isAr ? p.labelAr : p.labelFr}
                 </span>
