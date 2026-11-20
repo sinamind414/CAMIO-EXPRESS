@@ -13,6 +13,8 @@ export interface RatingPayload {
   stars: number;
   tags: string[];
   comment: string;
+  pricePaidDzd?: number;
+  distanceKm?: number;
 }
 
 interface TripRatingFormProps {
@@ -41,6 +43,8 @@ export function TripRatingForm({
   const [stars, setStars] = useState<number>(5);
   const [tags, setTags] = useState<string[]>(['Ponctuel', 'Soigneux']);
   const [comment, setComment] = useState<string>('');
+  const [pricePaid, setPricePaid] = useState<string>('');
+  const [distance, setDistance] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -123,6 +127,8 @@ export function TripRatingForm({
         stars: check.stars,
         tags: check.tags,
         comment: check.comment,
+        pricePaidDzd: pricePaid ? Number(pricePaid) : undefined,
+        distanceKm: distance ? Number(distance) : undefined,
       });
     } finally {
       setSubmitting(false);
@@ -216,6 +222,26 @@ export function TripRatingForm({
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* Prix réel payé + distance — transparence (modèle Bricoram) */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label htmlFor={`rating-price-${tripLabel}`} className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+            {isAr ? 'المبلغ المدفوع (DA)' : 'Prix payé (DA)'}
+          </label>
+          <input id={`rating-price-${tripLabel}`} type="number" min={0} value={pricePaid}
+            onChange={(e) => setPricePaid(e.target.value)} placeholder="ex. 16000"
+            className="w-full h-9 px-2.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-sm" />
+        </div>
+        <div>
+          <label htmlFor={`rating-distance-${tripLabel}`} className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+            {isAr ? 'المسافة (كم)' : 'Distance (km)'}
+          </label>
+          <input id={`rating-distance-${tripLabel}`} type="number" min={0} value={distance}
+            onChange={(e) => setDistance(e.target.value)} placeholder="ex. 8.4"
+            className="w-full h-9 px-2.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-sm" />
         </div>
       </div>
 

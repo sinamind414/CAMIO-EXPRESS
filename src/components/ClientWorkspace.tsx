@@ -89,6 +89,7 @@ import { SERVICE_VEHICLES, defaultVehicleForService, vehiclesForService } from '
 import { VehicleIcon } from './VehicleIcon';
 import { ServiceIcon } from './ServiceIcon';
 import { TripRatingForm, type RatingPayload } from './TripRatingForm';
+import { ReceiptPrint } from './ReceiptPrint';
 
 interface ClientWorkspaceProps {
   locale: Locale;
@@ -2380,6 +2381,10 @@ export function ClientWorkspace({
                       existingRating={activeRide.rating}
                       onSubmit={(payload) => handleSubmitUrbanRating(activeRide.id, payload)}
                     />
+
+                    {(activeRide.status === 'completed' || activeRide.status === 'rated') && (
+                      <ReceiptPrint ride={activeRide} locale={locale} />
+                    )}
 
                     {/* Chat Panel (unlocked only after assignment per C11) */}
                     {canSendUrbanChat(activeRide.status, settings) ? (

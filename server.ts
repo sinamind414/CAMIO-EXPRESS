@@ -1213,6 +1213,11 @@ async function startServer() {
         stars: validation.stars,
         tags: validation.tags,
         comment: validation.comment,
+        pricePaidDzd: Number.isFinite(Number(req.body.pricePaidDzd)) && Number(req.body.pricePaidDzd) > 0
+          ? Number(req.body.pricePaidDzd) : ride.finalAgreedPriceDzd,
+        distanceKm: Number.isFinite(Number(req.body.distanceKm)) && Number(req.body.distanceKm) > 0
+          ? Number(req.body.distanceKm) : ride.distanceKm,
+        identityVerified: driver?.status === 'approved',
         createdAt: ratedAt,
       };
       state.reviews.unshift(createdReview);
@@ -1224,6 +1229,24 @@ async function startServer() {
   });
 
   // --- Client Favorite Drivers ---
+  /** Réponse du chauffeur à un avis reçu (gestion de réputation, modèle Bricoram). */
+  app.post('/api/v1/reviews/:id/respond', requireAuth(['driver']), (req, res) => {
+    const review = state.reviews.find((r) => r.id === req.params.id);
+    if (!review) return sendError(res, 404, 'NOT_FOUND', 'Avis introuvable.', 'الرأي غير موجود.');
+    const auth = authOf(req)!;
+    const driver = state.drivers.find((d) => d.phone === auth.sub || d.id === auth.sub);
+    if (!driver || review.driverId !== driver.id) {
+      return sendError(res, 403, 'FORBIDDEN', 'Réponse réservée au chauffeur concerné.', 'غير مسموح.');
+    }
+    const text = String(req.body?.response ?? '').trim().slice(0, 500);
+    if (!text) return sendError(res, 400, 'VALIDATION_ERROR', 'Réponse vide.', 'الرد فارغ.');
+    review.response = text;
+    review.responseAt = new Date().toISOString();
+    persistState();
+    broadcast('driver.updated', driver);
+    res.json({ review });
+  });
+
   app.post('/api/v1/favorites/toggle', (req, res) => {
     const driverId = String(req.body?.driverId ?? '').trim();
     const driver = state.drivers.find((d) => d.id === driverId);
@@ -2491,6 +2514,10 @@ async function startServer() {
         stars: validation.stars,
         tags: validation.tags,
         comment: validation.comment,
+        pricePaidDzd: Number.isFinite(Number(req.body.pricePaidDzd)) && Number(req.body.pricePaidDzd) > 0
+          ? Number(req.body.pricePaidDzd) : ic.agreedPriceDzd,
+        distanceKm: ic.distanceKm,
+        identityVerified: driver?.status === 'approved',
         createdAt: ratedAt,
       };
       state.reviews.unshift(createdReview);

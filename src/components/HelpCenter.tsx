@@ -82,6 +82,47 @@ export function HelpCenter({ locale, settings, onNavigateWorkspace }: HelpCenter
           </p>
         </div>
 
+        {/* Guide des prix public (référentiel Bricoram / CDC §20) */}
+        <details className="rounded-lg border border-orange-200 dark:border-orange-900/70 bg-orange-50/40 dark:bg-orange-950/20">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-bold text-orange-900 dark:text-orange-200">
+            {isAr ? 'دليل أسعار النقل في الجزائر 🇩🇿' : 'Guide des prix du transport en Algérie 🇩🇿'}
+          </summary>
+          <div className="px-4 pb-4 space-y-3">
+            <p className="text-[11px] text-slate-600 dark:text-slate-300">
+              {isAr
+                ? 'بيانات مستقاة من مئات المهنيين النشطين (Bricoram). الأسعار تقديرية.'
+                : 'Données collectées auprès de centaines de professionnels (Bricoram). Prix indicatifs.'}
+            </p>
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="text-start text-slate-600 dark:text-slate-300">
+                  <th className="py-1.5 text-start font-semibold">{isAr ? 'الخدمة' : 'Prestation'}</th>
+                  <th className="py-1.5 text-start font-semibold">{isAr ? 'الأدنى' : 'Minimum'}</th>
+                  <th className="py-1.5 text-start font-semibold">{isAr ? 'المتوسط' : 'Moyenne'}</th>
+                  <th className="py-1.5 text-start font-semibold">{isAr ? 'الأعلى' : 'Maximum'}</th>
+                </tr>
+              </thead>
+              <tbody className="text-slate-800 dark:text-slate-200">
+                <tr className="border-t border-orange-100 dark:border-orange-900/50">
+                  <td className="py-1.5">{isAr ? 'نقل داخل الولاية' : 'Déménagement dans la wilaya'}</td>
+                  <td className="py-1.5">4 000 DA</td><td className="py-1.5 font-bold">5 000 DA</td><td className="py-1.5">6 000 DA</td>
+                </tr>
+                <tr className="border-t border-orange-100 dark:border-orange-900/50">
+                  <td className="py-1.5">{isAr ? 'نقل بين الولايات' : 'Déménagement hors wilaya'}</td>
+                  <td className="py-1.5">50 DA/km</td><td className="py-1.5 font-bold">70 DA/km</td><td className="py-1.5">100 DA/km</td>
+                </tr>
+                <tr className="border-t border-orange-100 dark:border-orange-900/50">
+                  <td className="py-1.5">{isAr ? 'فك وتركيب الأثاث' : 'Démontage / montage meubles'}</td>
+                  <td className="py-1.5">1 000 DA</td><td className="py-1.5 font-bold">2 000 DA</td><td className="py-1.5">3 000 DA</td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              {isAr ? 'العوامل المؤثرة: المسافة وحجم الأثاث. السعر النهائي هو اتفاق مباشر مع السائق، الدفع نقداً.' : 'Facteurs : distance et volume des meubles. Le prix final est un accord direct avec le chauffeur, paiement en cash.'}
+            </p>
+          </div>
+        </details>
+
         {/* Search Input */}
         <form
           role="search"

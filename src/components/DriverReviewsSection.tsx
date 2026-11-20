@@ -315,6 +315,31 @@ export function DriverReviewsSection({
                   {rev.comment && (
                     <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed">« {rev.comment} »</p>
                   )}
+
+                  {/* Prix réel payé + distance (transparence modèle Bricoram) */}
+                  {(rev.pricePaidDzd != null || rev.distanceKm != null) && (
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                      {rev.pricePaidDzd != null && (
+                        <span className="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 tabular-nums">
+                          {isAr ? 'المبلغ المدفوع' : 'Prix payé'} : {rev.pricePaidDzd.toLocaleString(locale === 'ar' ? 'ar-DZ' : 'fr-FR')} DA
+                        </span>
+                      )}
+                      {rev.distanceKm != null && (
+                        <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 tabular-nums">
+                          {rev.distanceKm} km
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {rev.response && (
+                    <div className="p-2 rounded-md bg-orange-50/70 dark:bg-orange-950/25 border border-orange-100 dark:border-orange-900/60">
+                      <div className="text-[10px] font-bold text-orange-800 dark:text-orange-300 mb-0.5">
+                        {isAr ? 'رد السائق' : 'Réponse du chauffeur'}
+                      </div>
+                      <p className="text-[11px] text-slate-700 dark:text-slate-300">« {rev.response} »</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="text-[11px] text-slate-500 dark:text-slate-400 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -322,6 +347,12 @@ export function DriverReviewsSection({
                     <span className="text-emerald-700 dark:text-emerald-400 font-medium">
                       {isAr ? 'رحلة مكتملة وموثّقة' : 'Course vérifiée'}
                     </span>
+                    {rev.identityVerified && (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold">
+                        <ShieldCheck className="w-3 h-3" />
+                        {isAr ? 'هوية موثّقة' : 'Identité vérifiée'}
+                      </span>
+                    )}
                     <span aria-hidden="true">·</span>
                     <span className="font-mono tabular-nums">{formatDateDz(rev.createdAt, locale)}</span>
                   </div>

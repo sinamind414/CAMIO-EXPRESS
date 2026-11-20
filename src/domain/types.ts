@@ -466,6 +466,11 @@ export interface DriverReview {
   stars: number;
   tags: string[];
   comment: string;
+  pricePaidDzd?: number;
+  distanceKm?: number;
+  response?: string;
+  responseAt?: string;
+  identityVerified?: boolean;
   createdAt: string;
 }
 
