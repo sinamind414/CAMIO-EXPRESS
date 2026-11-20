@@ -38,7 +38,13 @@ export default function App() {
         window.matchMedia('(prefers-color-scheme: dark)').matches
     )
   );
-  const [workspace, setWorkspace] = useState<AppTab>('client');
+  // L'espace de départ doit refléter le rôle persisté, sinon un rechargement
+  // renvoie systématiquement sur Client même si le chauffeur avait choisi son espace.
+  const [workspace, setWorkspace] = useState<AppTab>(() => {
+    if (typeof window === 'undefined') return 'client';
+    const stored = window.localStorage.getItem('camio_role');
+    return stored === 'driver' || stored === 'client' ? stored : 'client';
+  });
   const [data, setData] = useState<BootstrapPayload | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
