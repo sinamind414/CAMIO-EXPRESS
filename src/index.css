@@ -1,0 +1,81 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* MOVEDZ Logo Primary — Royal Deep Violet (#530391) */
+  --color-brand-50: #f6eeff;
+  --color-brand-100: #ecdcff;
+  --color-brand-200: #d8b8ff;
+  --color-brand-300: #bc84ff;
+  --color-brand-400: #9e4dff;
+  --color-brand-500: #7a1fd4;
+  --color-brand-600: #6308b0;
+  --color-brand-700: #530391;
+  --color-brand-800: #420275;
+  --color-brand-900: #2f0354;
+  --color-brand-950: #1d0236;
+
+  /* MOVEDZ Logo Accent — Blaze Orange (#FE5601) */
+  --color-orange-50: #fff4ee;
+  --color-orange-100: #ffe4d4;
+  --color-orange-200: #ffc6a8;
+  --color-orange-300: #ff9e6e;
+  --color-orange-400: #ff7433;
+  --color-orange-500: #fe5601;
+  --color-orange-600: #e54900;
+  --color-orange-700: #c23b00;
+  --color-orange-800: #9a3006;
+  --color-orange-900: #7c280b;
+  --color-orange-950: #431203;
+
+  /* Cool-Violet Tinted Sophisticated Neutrals (<4% saturation) */
+  --color-slate-50: #f9f8fc;
+  --color-slate-100: #f2eff8;
+  --color-slate-200: #e5dfef;
+  --color-slate-300: #cfc6df;
+  --color-slate-400: #8e84a3;
+  --color-slate-500: #685f7d;
+  --color-slate-600: #4d4463;
+  --color-slate-700: #352d4a;
+  --color-slate-800: #241c38;
+  --color-slate-900: #171029;
+  --color-slate-950: #0f0a1d;
+}
+
+@layer base {
+  :root {
+    --font-display: 'Plus Jakarta Sans', 'Cairo', system-ui, sans-serif;
+    --font-body: 'DM Sans', 'Cairo', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  html {
+    font-family: var(--font-body);
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  [dir="rtl"] {
+    font-family: 'Cairo', 'DM Sans', system-ui, sans-serif;
+  }
+
+  [dir="rtl"] h1,
+  [dir="rtl"] h2,
+  [dir="rtl"] h3,
+  [dir="rtl"] h4,
+  [dir="rtl"] .font-display {
+    font-family: 'Cairo', 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}

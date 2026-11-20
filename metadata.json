@@ -1,0 +1,6 @@
+{
+  "name": "CAMIO EXPRESS",
+  "description": "Plateforme algérienne de logistique, déménagement, évacuation de déchets et fret inter-wilaya (Client, Chauffeur, Administration).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

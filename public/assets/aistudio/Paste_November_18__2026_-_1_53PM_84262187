@@ -1,0 +1,2123 @@
+Cahier des charges fonctionnel et technique — Plateforme Lalamove Algérie
+Version finale v2.0 — 18/11/2026
+Table of Contents
+CAHIER DES CHARGES FONCTIONNEL ET TECHNIQUE	1
+Plateforme de logistique, déménagement et évacuation de déchets — « Lalamove Algérie »	1
+SOMMAIRE	1
+0. Glossaire et conventions	1
+1. Périmètre, acteurs et hypothèses	1
+2. Architecture technique	1
+3. Stack technologique imposée / recommandée	1
+4. Modèle de données	1
+5. Spécification de l’API (REST + WebSocket)	1
+6. Moteur de mise en relation et d’offres (bidding)	1
+7. Machine à états des courses	1
+8. Tarification, engagement et abonnements	1
+9. Application Client — spécifications détaillées	1
+10. Application Chauffeur — spécifications détaillées	1
+11. Panneau d’administration — spécifications détaillées	1
+12. Sécurité, protection des données et conformité	1
+13. Contraintes « marché algérien » : performance, réseau, langues	1
+14. Intégrations tierces	1
+15. DevOps, environnements, CI/CD, supervision	1
+16. Stratégie de tests et critères d’acceptation	1
+17. Planning, découpage en lots et livrables	1
+18. Risques, points ouverts et décisions à trancher	1
+19. Annexes	1
+20. Référentiel de prix observés en Algérie	1
+
+CAHIER DES CHARGES FONCTIONNEL ET TECHNIQUE
+Plateforme de logistique, déménagement et évacuation de déchets — « Lalamove Algérie »
+VERSION FINALE — v2.0
+Référence	Version	Date	Statut
+CDC-LALAMOVE-DZ	2.0 (finale)	18/11/2026	Document de référence contractuel — à valider et signer par le maître d’ouvrage
+Historique des versions
+Version	Date	Nature
+1.0	18/11/2026	CDC fonctionnel initial (document source fourni par le maître d’ouvrage)
+1.1	18/11/2026	Enrichissement technique complet (modèle de données, API, états, sécurité, DevOps, recette)
+2.0	18/11/2026	Version finale consolidée : intégration du module inter-wilaya dans le corps du document, grille tarifaire assise sur les prix observés du marché algérien, décisions tranchées, doublons supprimés, renumérotation définitive
+Corrections majeures apportées dans la version finale
+#	Correction	Emplacement
+C1	Deux parcours produits distincts : course urbaine (instantanée) et trajet inter-wilaya (demande de devis planifiée). Le CDC initial ne traitait que le premier.	§1.1, §5.14, §6.5, §7.4, §9.4, §10.8
+C2	Le module inter-wilaya n’est plus une annexe : ses tables, endpoints, états et règles sont intégrés au corps du modèle de données et de l’API.	§4.3.2, §5.14
+C3	Grille tarifaire complétée et recalée sur les prix réellement pratiqués en Algérie (référentiel kilométrique 50-100 DA/km, coût de revient carburant).	§8.1, §8.5, §20
+C4	Encadrement du paiement en espèces à fort montant : engagement horodaté, acompte déclaré, plafond de renégociation sur place.	§8.6
+C5	Prix plancher et tri « meilleure offre » généralisés : le tri par prix brut seul est interdit, il attire les offres non tenues.	§6.2, §8.5
+C6	Retour à vide et groupage ajoutés comme leviers de prix officiels (phénomène documenté : 40 % de camions roulent à vide au retour).	§8.5
+C7	Planning et lots mis à jour : ajout du lot L3.5 « Inter-wilaya » et révision de la charge.	§17
+C8	Registre des risques et décisions complété (5 nouvelles décisions à trancher, 3 nouveaux risques).	§18
+C9	Suppression des redites et des marqueurs de travail (« décision proposée », « ajout v1.1 ») ; numérotation et renvois vérifiés.	Ensemble
+Document lié : Etude-Marche-Prix-Inter-Wilaya.md — étude de marché détaillée (sources, relevés de prix, cartographie concurrentielle). Le §20 du présent document en constitue la synthèse normative.
+________________________________________
+SOMMAIRE
+Partie 1 — Cadrage 1. Périmètre, acteurs et hypothèses · Glossaire 2. Architecture technique 3. Stack technologique
+Partie 2 — Modèle de données et API 4. Modèle de données 5. Spécification de l’API (REST + WebSocket) 6. Moteur de mise en relation et d’offres 7. Machines à états 8. Tarification, engagement et abonnements
+Partie 3 — Spécifications des interfaces 9. Application Client 10. Application Chauffeur 11. Panneau d’administration
+Partie 4 — Exigences transverses 12. Sécurité, données personnelles et conformité 13. Contraintes marché algérien 14. Intégrations tierces
+Partie 5 — Exécution du projet 15. DevOps, environnements, CI/CD, supervision 16. Stratégie de tests et critères d’acceptation 17. Planning, découpage en lots et livrables 18. Risques et décisions à trancher
+Annexes 19. Annexes techniques — énumérations, codes d’erreur, paramètres, checklists 20. Référentiel de prix observés en Algérie
+Note de lecture. Les deux parcours produits (course urbaine / trajet inter-wilaya) sont traités en parallèle dans chaque partie : les exigences communes s’appliquent aux deux, et chaque section précise, quand c’est nécessaire, les écarts réglementaires et fonctionnels du parcours inter-wilaya.
+________________________________________
+0. Glossaire et conventions
+0.1 Glossaire
+Terme	Définition
+Client	Particulier ou entreprise qui publie une demande de prestation.
+Chauffeur	Professionnel indépendant propriétaire/exploitant d’un véhicule utilitaire ou d’un camion, abonné à la plateforme.
+Course (ride / job)	Prestation complète, de la demande publiée jusqu’à la notation.
+Demande	Publification d’un besoin par un client, avant attribution à un chauffeur.
+Offre (bid)	Proposition de prix (et éventuellement de délai) émise par un chauffeur sur une demande.
+Bras	Manutentionnaire accompagnant le chauffeur. Facturé à l’unité (0, 1, 2, 3+).
+Benne / camion à benne	Camion basculant destiné aux gravats et encombrants.
+KYC	Know Your Customer — vérification d’identité et des documents professionnels du chauffeur.
+Voucher	Code de recharge prépayé permettant d’activer 30 jours d’abonnement.
+Wilaya / Commune	Découpage administratif algérien (58 wilayas).
+Trial	Période d’essai gratuite de 30 jours à l’inscription du chauffeur.
+Prix plancher / plafond	Bornes d’encadrement des offres et de l’estimation pour éviter la fraude et les abus.
+0.2 Conventions de lecture
+•	DOIT / NE DOIT PAS = exigence ferme, vérifiée en recette.
+•	DEVRAIT = exigence forte, écart à justifier par le prestataire.
+•	PEUT = option.
+•	Toutes les valeurs monétaires sont en DZD, stockées en entiers (centimes ou dinars entiers). Décision proposée : stockage en dinars entiers (amount_dzd INTEGER), aucune décimale.
+•	Toutes les dates sont en UTC côté serveur (timestamptz), affichées en Africa/Algiers (UTC+1) côté client.
+•	Les exemples de payloads sont en JSON ; les champs sont en snake_case.
+•	Les identifiants exposés à l’extérieur sont des UUID v4 (jamais d’id séquentiel dans une URL publique), sauf les codes métier lisibles (ride_code du type LM-2026-004512).
+0.3 Vocabulaire des statuts (résumé)
+Objet	Statuts
+Compte chauffeur	pending_documents → pending_review → approved / rejected / suspended / blocked
+Abonnement	trial → active → grace → expired ; pending_payment
+Demande / Course	draft → searching → assigned → driver_arriving → arrived_pickup → loading → in_transit → arrived_dropoff → completed → rated ; branches cancelled_client, cancelled_driver, expired, disputed
+Document KYC	uploaded → approved / rejected (avec motif)
+Demande inter-wilaya	draft → collecting → quoted → booked → in_progress → completed → rated ; branches cancelled_client, cancelled_driver, expired, disputed
+Devis inter-wilaya	pending → countered → accepted / rejected / withdrawn / expired
+________________________________________
+1. Périmètre, acteurs et hypothèses
+1.1 Périmètre inclus (v1 et v1.5)
+Socle commun (v1)
+1.	Application mobile Client (Android + iOS).
+2.	Application mobile Chauffeur (Android prioritaire, iOS en option phase 2).
+3.	Panneau d’administration web.
+4.	Backend API + temps réel + base de données + stockage médias.
+5.	Module abonnement chauffeur (essai, virement/CCP justificatif, voucher, expiration).
+6.	Module mise en relation par offres (bidding) avec notifications géolocalisées.
+7.	Suivi GPS du camion, chat + notes vocales, notation.
+Deux parcours produits, deux logiques de mise en relation
+	A. Course urbaine (v1)	B. Trajet inter-wilaya (v1.5)
+Nature	« Maintenant », dans la wilaya	Planifié, entre deux wilayas
+Modèle	Enchère instantanée : diffusion 15 km, réponse en 15 min	Demande de devis : diffusion par axe, collecte 48 h
+Prix moyen	5 000 – 25 000 DA	15 000 – 70 000 DA
+Suivi	GPS temps réel	Jalons (départ / chargement / livraison)
+Sections de référence	§5.6, §6.1, §7.2, §9.1-9.3, §10.2-10.7	§4.3.2, §5.14, §6.5, §7.4, §8.5-8.6, §9.4, §10.8, §11.7
+Décision de cadrage : les deux parcours sont dans le périmètre du contrat, mais livrés en deux temps — la course urbaine en v1 (bêta Oran), l’inter-wilaya en v1.5, une fois les 20 chauffeurs pilotes opérationnels. Cette séquence réduit le risque d’exécution et permet de valider l’abonnement avant d’ouvrir les longs trajets.
+1.2 Hors périmètre v1 (à cadrer en phase 2)
+•	Paiement en ligne (CIB / Edahabia / SATIM) — exclu, paiement cash à la livraison. La plateforme n’encaisse jamais le prix du transport ; l’acompte inter-wilaya est seulement déclaré et constaté (§8.6).
+•	Groupage multi-clients automatisé (tournées optimisées) : le groupage est déclaré par le chauffeur (§8.5), il n’est pas calculé par la plateforme.
+•	Assurance des biens transportés : la plateforme n’est pas assureur (§8.6).
+•	Facturation électronique / comptabilité.
+•	Optimisation de tournées multi-arrêts, planification récurrente (B2B).
+•	Programme de fidélité, parrainage, codes promo.
+•	Version web « client » (réservation depuis navigateur).
+•	Suivi de flotte multi-véhicules pour un même compte chauffeur (1 chauffeur = 1 véhicule actif en v1, mais le modèle de données prévoit le multi-véhicule).
+•	Intégration API d’entreprises (B2B) — prévue en phase 3.
+1.3 Acteurs et rôles
+Acteur	Canal	Rôle principal
+Client (particulier / entreprise)	App mobile	Publier une demande, choisir une offre, suivre, payer en cash, noter.
+Chauffeur	App mobile	S’abonner, se déclarer disponible, offrir, exécuter, encaisser.
+Administrateur	Web	Valider les KYC, valider les paiements d’abonnement, superviser les courses, gérer les litiges.
+Super-administrateur	Web	Tout + gestion des comptes admin, paramètres tarifaires, vouchers, exports.
+Support / opérateur	Web	Lecture seule + gestion des litiges + contact client/chauffeur (pas d’accès aux paramètres financiers).
+Système (jobs)	Backend	Expiration des demandes, expiration des abonnements, relances, nettoyage documents.
+1.4 Hypothèses de dimensionnement (v1, 12 premiers mois)
+Hypothèse	Valeur retenue pour le dimensionnement
+Chauffeurs inscrits	500
+Chauffeurs actifs simultanément (pic)	80
+Clients inscrits	20 000
+Demandes / jour (pic)	300
+Offres / demande	1 à 8
+Messages chat / course	< 30
+Photos / demande	1 à 6 (compressées à ≤ 300 Ko)
+Documents KYC / chauffeur	4 à 6 pièces (≤ 5 Mo chacune)
+Demandes inter-wilaya / mois (après ouverture)	150
+Devis par demande inter-wilaya	2 à 5
+Axes ouverts au lancement de la v1.5	5 à 10 depuis Oran
+Ces hypothèses DOIVENT être reprises dans un test de charge (cf. §16.4). Une architecture capable de ×10 sans refonte est attendue (scale horizontal du backend, cache Redis, stockage objet).
+1.5 Contraintes structurantes
+•	C1 — Monétisation uniquement par abonnement chauffeur : aucune commission sur course, donc aucun flux financier de course ne transite par la plateforme. Le prix affiché est informatif.
+•	C2 — Paiement cash : l’application NE DOIT PAS promettre de paiement garanti, et DOIT afficher un avertissement clair (« le prix est un accord entre vous et le chauffeur »).
+•	C3 — Réseau dégradé (3G, coupures) : l’app Chauffeur DOIT rester utilisable en mode dégradé (file d’attente locale, reprise automatique).
+•	C4 — APK < 30 Mo : contraint le choix des librairies, des polices et des assets.
+•	C5 — Bilingue FR / AR (RTL), avec darija en latin dans les libellés libres.
+•	C6 — Aucune API de paiement, donc la validation des abonnements est manuelle ou semi-automatique (back-office).
+________________________________________
+2. Architecture technique
+2.1 Vue d’ensemble (composants)
+┌──────────────────┐   ┌──────────────────┐   ┌────────────────────┐
+│  App Client      │   │  App Chauffeur   │   │  Admin Web (SPA)   │
+│  Flutter         │   │  Flutter         │   │  React + Vite      │
+└────────┬─────────┘   └────────┬─────────┘   └─────────┬──────────┘
+         │ HTTPS / WSS          │ HTTPS / WSS           │ HTTPS
+         └──────────┬───────────┴───────────────────────┘
+                    ▼
+        ┌───────────────────────────────┐
+        │  API Gateway / Reverse Proxy  │  (Nginx ou Traefik) TLS, rate limit
+        └───────────────┬───────────────┘
+                        ▼
+        ┌───────────────────────────────┐      ┌──────────────────────┐
+        │  Backend API (NestJS/Node)    │◄────►│  Redis               │
+        │  - REST /api/v1               │      │  - cache, sessions   │
+        │  - WebSocket /ws (Socket.IO)  │      │  - GEO positions     │
+        │  - workers (BullMQ)           │      │  - pub/sub, verrous  │
+        └───────┬───────────────┬───────┘      └──────────────────────┘
+                │               │
+                ▼               ▼
+     ┌────────────────┐  ┌──────────────────┐   ┌─────────────────────┐
+     │ PostgreSQL 16  │  │ Stockage objet   │   │ Services externes   │
+     │ + PostGIS      │  │ S3 / MinIO       │   │ - SMS OTP           │
+     │                │  │ (photos, KYC,    │   │ - FCM / APNs        │
+     │                │  │  vocaux, reçus)  │   │ - Maps (tiles/geocode) │
+     └────────────────┘  └──────────────────┘   └─────────────────────┘
+2.2 Principes d’architecture
+•	AP1 — Monolithe modulaire au démarrage (modules auth, users, vehicles, rides, bids, subscriptions, media, admin, notifications, geo), avec frontières de domaine claires pour extraire plus tard un service geo/notifications. Pas de microservices en v1 (coût d’exploitation disproportionné).
+•	AP2 — API-first : les 3 clients (2 apps + admin) consomment la même API versionnée. Aucune logique métier dans les apps.
+•	AP3 — Idempotence : toute mutation déclenchée par un mobile (acceptation d’offre, changement d’état, upload) accepte un en-tête Idempotency-Key.
+•	AP4 — Temps réel par WebSocket (Socket.IO) + fallback polling (l’app Chauffeur en réseau faible DOIT pouvoir fonctionner en polling 15 s).
+•	AP5 — Asynchrone pour tout ce qui est lent (SMS, push, transcodage audio, génération de PDF, purge) via file BullMQ.
+•	AP6 — Traçabilité : audit_log pour toutes les actions admin et tous les changements financiers.
+•	AP7 — Multi-tenant « wilaya » logique : chaque course et chaque chauffeur porte une wilaya_code, ce qui permettra d’ouvrir ville par ville et d’appliquer des règles tarifaires par zone.
+2.3 Flux de données temps réel
+Canal WebSocket	Producteur	Consommateur	Contenu
+driver:{id}	API	App chauffeur	ride.request.nearby, bid.accepted, bid.rejected, ride.status.changed, subscription.expiring
+client:{id}	API	App client	bid.created, bid.updated, ride.assigned, driver.position, ride.status.changed, chat.message
+ride:{id}	API	Client + chauffeur assigné + admin (option)	Position, statuts, chat, pièces jointes
+admin:dashboard	API	Admin web	Compteurs live (courses actives, chauffeurs en ligne, paiements en attente)
+Règle de salle : un utilisateur ne peut rejoindre que user:{son_propre_id} et les ride:{id} auxquels il participe. Vérification du JWT à la poignée de main + à chaque join. Les admins rejoignent admin:* selon leur rôle.
+2.4 Positions GPS — modèle de stockage
+•	Écriture : l’app Chauffeur envoie sa position toutes les 10 s si un client attend (course active), toutes les 60 s en disponibilité, à l’arrêt si batterie < 15 % ou mode économie.
+•	Stockage chaud : Redis GEOADD drivers:online <lon> <lat> <driver_id> + hash driver:{id}:pos avec ts, heading, speed, accuracy.
+•	Historique : table driver_positions en PostgreSQL partitionnée par jour, purgée à 90 jours (traçabilité litige). Écriture par batch (toutes les 60 s) pour épargner la base.
+•	Recherche de proximité : GEOSEARCH drivers:online FROMLONLAT ... BYRADIUS 15 km ASC COUNT 50, puis filtrage en base (statut, abonnement, type de véhicule, wilaya).
+•	Aucun stockage de position en clair dans les logs (donnée personnelle).
+2.5 Diagramme de séquence — cycle complet d’une course
+Client            API                Redis/PostGIS        Chauffeurs        Admin
+  │                │                     │                   │              │
+  │ POST /rides    │                     │                   │              │
+  ├───────────────►│ validation + estimation                   │              │
+  │                ├─ GEOSEARCH ────────►│                   │              │
+  │                │◄── driver_ids ──────┤                   │              │
+  │                ├─ push ride.request ─────────────────────►│              │
+  │◄─ 201 ride{searching}                  │                   │              │
+  │                │                                       POST /bids         │
+  │                │◄──────────────────────────────────────────┤              │
+  │◄─ ws bid.created ───────────────────────                  │              │
+  │ POST /rides/{id}/accept-bid                                │              │
+  ├───────────────►│ transaction: ride.assigned, bid.accepted  │              │
+  │                ├─ ws bid.accepted ────────────────────────►│              │
+  │                │  (les autres offres → rejected)            │              │
+  │                │                                       PATCH /status    │
+  │                │◄──────────────────────────────────────────┤              │
+  │◄─ ws ride.status.changed ──────────────                   │              │
+  │   [positions GPS en continu, chat, notes vocales]          │              │
+  │                │◄──────────── PATCH completed ─────────────┤              │
+  │ POST /rides/{id}/rating                                    │              │
+  ├───────────────►│ recalcul note moyenne, maj compteur        │              │
+  │                │                                       ws payout? no (cash)│
+  │                ├─ audit_log + stats ──────────────────────────────────────►│
+________________________________________
+3. Stack technologique imposée / recommandée
+3.1 Décisions et justifications
+Couche	Choix retenu	Justification	Alternative acceptable
+Apps mobiles	Flutter 3.x (Dart)	Un seul code pour Android/iOS, excellent rendu RTL arabe, APK maîtrisable en taille (split ABI), cartographie mature.	React Native (si l’équipe est JS)
+Backend	Node.js 20 + NestJS (TypeScript)	Structuration modulaire, partage de types avec l’admin, écosystème WebSocket/BullMQ mature.	Laravel 11 (si équipe PHP) — même API, mêmes contrats
+Base de données	PostgreSQL 16 + PostGIS	Transactions, contraintes fortes, géospatial natif, partitionnement.	MySQL 8 + calcul de distance applicatif (moins bon)
+Cache / temps réel	Redis 7	GEO, pub/sub, verrous distribués, rate limiting.	—
+Files / jobs	BullMQ	Expiration des demandes, push, purge, relances.	Cron système (insuffisant)
+Temps réel	Socket.IO (WSS)	Reconnexion automatique et fallback long-polling (crucial 3G).	MQTT (sur-dimensionné)
+Stockage médias	S3-compatible (MinIO auto-hébergé ou Backblaze B2)	Coût faible, URLs signées, sortie facile.	AWS S3 (coût/egress plus élevé en Algérie)
+Admin web	React 18 + Vite + TypeScript + Tailwind + shadcn/ui	Rapide, léger, composants accessibles.	Vue 3 + Element Plus
+Notifications	FCM (Android) + APNs (iOS)	Standard, gratuit.	OneSignal
+SMS OTP	Agrégateur SMS local (à contractualiser) avec Twilio en secours	Coût par SMS local plus faible, meilleure délivrabilité vers les opérateurs algériens.	—
+Cartographie	Mapbox (tuiles + directions) ou Google Maps Platform	Voir §14.1 pour l’arbitrage coût/licence.	MapLibre + OSM (coût mini, moins précis)
+CI/CD	GitHub Actions	Standard, gratuit sur repo privé de taille modeste.	GitLab CI
+Infra	VPS Hetzner/OVH (2 vCPU / 4 Go → montée en charge), Docker Compose	Coût maîtrisé au démarrage (< 40 €/mois).	AWS/DO
+Monitoring	Sentry (erreurs) + Uptime Kuma (dispo) + logs JSON + Grafana/Loki (option)	Diagnostic rapide des bugs terrain.	Prometheus/Grafana complet
+3.2 Versions minimales imposées
+•	Android : minSdk 23 (Android 6), targetSdk 35. iOS : 13+.
+•	Node.js 20 LTS, PostgreSQL 16, Redis 7, Nginx 1.24.
+•	Flutter : dernière version stable au démarrage du lot 1, gelée pendant la phase de dev.
+3.3 Arborescence de dépôt attendue (monorepo)
+lalamove-algeria/
+├─ apps/
+│  ├─ mobile-client/          # Flutter
+│  ├─ mobile-driver/          # Flutter
+│  └─ admin-web/              # React
+├─ services/
+│  └─ api/                    # NestJS
+│     ├─ src/modules/{auth,users,vehicles,rides,bids,subscriptions,media,geo,notifications,admin,payments}
+│     ├─ src/common/{guards,filters,interceptors,dto}
+│     └─ test/
+├─ packages/
+│  ├─ shared-types/           # DTO partagés (générés depuis OpenAPI)
+│  └─ config/                 # eslint, tsconfig, tailwind presets
+├─ infra/
+│  ├─ docker/                 # Dockerfiles, docker-compose.yml
+│  ├─ nginx/
+│  └─ scripts/                # backup, migrate, seed
+├─ docs/
+│  ├─ openapi.yaml            # source de vérité de l'API
+│  ├─ modele-donnees.md
+│  └─ runbook-exploitation.md
+└─ .github/workflows/
+Exigence : le contrat d’API DOIT être un OpenAPI 3.1 maintenu dans docs/openapi.yaml, à jour à chaque PR (vérifié en CI), avec génération automatique du client TypeScript et du client Dart.
+________________________________________
+4. Modèle de données
+4.1 Principes
+•	Clés primaires UUID v4 (gen_random_uuid()), colonnes created_at / updated_at timestamptz sur toutes les tables, deleted_at (soft delete) sur les entités métier.
+•	Contraintes CHECK sur les statuts (pas d’ENUM PostgreSQL natif : plus difficile à faire évoluer → VARCHAR + CHECK + validation applicative).
+•	Index sur toutes les clés étrangères et sur les colonnes de filtrage/tri.
+•	Aucune suppression physique des courses, paiements, notes (obligation de traçabilité). Purge uniquement des positions GPS (> 90 j) et des médias orphelins.
+•	Devise : amount_dzd INTEGER CHECK (amount_dzd >= 0).
+4.2 Diagramme entité-association (textuel)
+users 1───1 client_profiles
+users 1───1 driver_profiles 1───N driver_documents
+driver_profiles 1───N vehicles 1───N vehicle_photos
+driver_profiles 1───N subscriptions 1───N subscription_payments
+driver_profiles 1───N driver_positions
+users 1───N rides (comme client)
+driver_profiles 1───N rides (comme chauffeur)
+rides 1───N ride_offers
+rides 1───N ride_status_events
+rides 1───N ride_media
+rides 1───N chat_messages
+rides 1───1 ride_ratings (2 notes : client→chauffeur, chauffeur→client)
+rides 1───N disputes
+wilayas 1───N communes
+pricing_rules N───1 wilaya
+admin_users 1───N audit_logs
+vouchers 1───N voucher_redemptions
+devices 1───N (1 user, N devices)
+
+-- Module inter-wilaya (§4.3.2)
+route_matrix (58 × 58 axes)
+users 1───N intercity_requests (comme client)
+driver_profiles 1───N intercity_requests (comme chauffeur)
+intercity_requests 1───N intercity_quotes
+driver_profiles 1───N driver_coverage
+driver_profiles 1───N empty_return_declarations
+intercity_requests 1───N ride_media / chat_messages / ride_ratings (via parent_type)
+4.3 Schéma SQL (extrait exécutable, PostgreSQL 16)
+-- ============ RÉFÉRENTIEL GÉOGRAPHIQUE ============
+CREATE TABLE wilayas (
+  code            SMALLINT PRIMARY KEY,            -- 01..58
+  name_fr         TEXT NOT NULL,
+  name_ar         TEXT NOT NULL,
+  is_active       BOOLEAN NOT NULL DEFAULT FALSE   -- ouverture ville par ville
+);
+
+CREATE TABLE communes (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  wilaya_code     SMALLINT NOT NULL REFERENCES wilayas(code),
+  name_fr         TEXT NOT NULL,
+  name_ar         TEXT NOT NULL
+);
+
+-- ============ UTILISATEURS ============
+CREATE TABLE users (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  phone_e164      TEXT NOT NULL UNIQUE,            -- +213xxxxxxxxx
+  phone_verified_at TIMESTAMPTZ,
+  role            VARCHAR(16) NOT NULL CHECK (role IN ('client','driver')),
+  full_name       TEXT,
+  email           TEXT,
+  locale          VARCHAR(5) NOT NULL DEFAULT 'fr' CHECK (locale IN ('fr','ar')),
+  status          VARCHAR(16) NOT NULL DEFAULT 'active'
+                    CHECK (status IN ('active','suspended','blocked','deleted')),
+  last_login_at   TIMESTAMPTZ,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  deleted_at      TIMESTAMPTZ
+);
+CREATE INDEX idx_users_role_status ON users(role, status);
+
+CREATE TABLE otp_codes (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  phone_e164      TEXT NOT NULL,
+  code_hash       TEXT NOT NULL,                   -- bcrypt/argon2 du code à 4-6 chiffres
+  purpose         VARCHAR(24) NOT NULL CHECK (purpose IN ('login','phone_change','ride_confirm')),
+  attempts        SMALLINT NOT NULL DEFAULT 0,
+  expires_at      TIMESTAMPTZ NOT NULL,
+  consumed_at     TIMESTAMPTZ,
+  ip              INET,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_otp_phone_created ON otp_codes(phone_e164, created_at DESC);
+
+CREATE TABLE refresh_tokens (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash      TEXT NOT NULL,
+  device_id       UUID,
+  user_agent      TEXT,
+  expires_at      TIMESTAMPTZ NOT NULL,
+  revoked_at      TIMESTAMPTZ,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_rt_user ON refresh_tokens(user_id) WHERE revoked_at IS NULL;
+
+CREATE TABLE devices (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  platform        VARCHAR(10) NOT NULL CHECK (platform IN ('android','ios','web')),
+  push_token      TEXT,
+  app_version     TEXT,
+  locale          VARCHAR(5),
+  last_seen_at    TIMESTAMPTZ,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX uq_devices_push ON devices(push_token) WHERE push_token IS NOT NULL;
+
+-- ============ CLIENT ============
+CREATE TABLE client_profiles (
+  user_id         UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  wilaya_code     SMALLINT REFERENCES wilayas(code),
+  commune_id      UUID REFERENCES communes(id),
+  default_address TEXT,
+  default_lat     NUMERIC(9,6),
+  default_lng     NUMERIC(9,6),
+  is_company      BOOLEAN NOT NULL DEFAULT FALSE,
+  company_name    TEXT,
+  rides_count     INTEGER NOT NULL DEFAULT 0,
+  avg_rating_given NUMERIC(3,2)
+);
+
+-- ============ CHAUFFEUR ============
+CREATE TABLE driver_profiles (
+  user_id         UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  wilaya_code     SMALLINT NOT NULL REFERENCES wilayas(code),
+  status          VARCHAR(20) NOT NULL DEFAULT 'pending_documents'
+                    CHECK (status IN ('pending_documents','pending_review','approved',
+                                      'rejected','suspended','blocked')),
+  rejection_reason TEXT,
+  bio             TEXT,
+  is_online       BOOLEAN NOT NULL DEFAULT FALSE,
+  online_since    TIMESTAMPTZ,
+  current_vehicle_id UUID,
+  rating_avg      NUMERIC(3,2) NOT NULL DEFAULT 0,
+  ratings_count   INTEGER NOT NULL DEFAULT 0,
+  rides_completed INTEGER NOT NULL DEFAULT 0,
+  rides_cancelled INTEGER NOT NULL DEFAULT 0,
+  onboarding_step SMALLINT NOT NULL DEFAULT 1,
+  approved_at     TIMESTAMPTZ,
+  approved_by     UUID
+);
+CREATE INDEX idx_driver_status_online ON driver_profiles(status, is_online);
+
+CREATE TABLE vehicles (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  driver_id       UUID NOT NULL REFERENCES driver_profiles(user_id) ON DELETE CASCADE,
+  category        VARCHAR(20) NOT NULL
+                    CHECK (category IN ('small_van','medium_truck','large_truck','tipper')),
+  brand           TEXT NOT NULL,                  -- ex: Suzuki, Hyundai, Sonacome
+  model           TEXT,
+  plate_number    TEXT NOT NULL,                  -- format algérien (ex: 00123-118-16)
+  year            SMALLINT,
+  max_load_kg     INTEGER,
+  volume_m3       NUMERIC(5,2),
+  has_tailgate    BOOLEAN NOT NULL DEFAULT FALSE,
+  has_ramps       BOOLEAN NOT NULL DEFAULT FALSE,
+  is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_vehicles_driver ON vehicles(driver_id);
+CREATE UNIQUE INDEX uq_vehicle_plate ON vehicles(upper(plate_number));
+
+CREATE TABLE driver_documents (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  driver_id       UUID NOT NULL REFERENCES driver_profiles(user_id) ON DELETE CASCADE,
+  doc_type        VARCHAR(24) NOT NULL
+                    CHECK (doc_type IN ('license','vehicle_registration','insurance',
+                                        'vehicle_photo','vehicle_photo_plate','national_id')),
+  vehicle_id      UUID REFERENCES vehicles(id),
+  file_key        TEXT NOT NULL,                  -- clé S3 (bucket privé)
+  mime_type       TEXT NOT NULL,
+  size_bytes      INTEGER NOT NULL,
+  status          VARCHAR(12) NOT NULL DEFAULT 'uploaded'
+                    CHECK (status IN ('uploaded','approved','rejected')),
+  review_note     TEXT,
+  expires_on      DATE,                           -- validité assurance / permis
+  reviewed_by     UUID,
+  reviewed_at     TIMESTAMPTZ,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_docs_driver_status ON driver_documents(driver_id, status);
+
+-- ============ ABONNEMENT ============
+CREATE TABLE subscriptions (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  driver_id       UUID NOT NULL REFERENCES driver_profiles(user_id) ON DELETE CASCADE,
+  kind            VARCHAR(12) NOT NULL CHECK (kind IN ('trial','paid','manual')),
+  status          VARCHAR(16) NOT NULL
+                    CHECK (status IN ('active','grace','expired','cancelled')),
+  starts_on       DATE NOT NULL,
+  ends_on         DATE NOT NULL,                  -- inclus
+  grace_until     DATE,                           -- +3 j de tolérance
+  amount_dzd      INTEGER NOT NULL DEFAULT 0,
+  created_by      UUID,                           -- admin si 'manual'
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_subs_driver_dates ON subscriptions(driver_id, ends_on DESC);
+
+CREATE TABLE subscription_payments (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  driver_id       UUID NOT NULL REFERENCES driver_profiles(user_id) ON DELETE CASCADE,
+  subscription_id UUID REFERENCES subscriptions(id),
+  method          VARCHAR(16) NOT NULL CHECK (method IN ('baridimob','ccp','voucher','cash_agency')),
+  amount_dzd      INTEGER NOT NULL,
+  status          VARCHAR(16) NOT NULL DEFAULT 'pending'
+                    CHECK (status IN ('pending','approved','rejected','refunded')),
+  proof_file_key  TEXT,                           -- bucket privé
+  voucher_code    TEXT,
+  reference       TEXT,                           -- n° de transaction / virement
+  submitted_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  reviewed_by     UUID,
+  reviewed_at     TIMESTAMPTZ,
+  rejection_reason TEXT,
+  period_days     SMALLINT NOT NULL DEFAULT 30
+);
+CREATE INDEX idx_payments_status ON subscription_payments(status, submitted_at);
+
+CREATE TABLE vouchers (
+  code            TEXT PRIMARY KEY,
+  batch           TEXT,
+  period_days     SMALLINT NOT NULL DEFAULT 30,
+  max_uses        INTEGER NOT NULL DEFAULT 1,
+  uses            INTEGER NOT NULL DEFAULT 0,
+  valid_until     DATE,
+  created_by      UUID,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+-- ============ COURSES ============
+CREATE TABLE rides (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ride_code       TEXT NOT NULL UNIQUE,           -- LM-2026-004512
+  client_id       UUID NOT NULL REFERENCES users(id),
+  driver_id       UUID REFERENCES driver_profiles(user_id),
+  vehicle_id      UUID REFERENCES vehicles(id),
+  service_type    VARCHAR(20) NOT NULL
+                    CHECK (service_type IN ('moving','waste_removal','freight')),
+  vehicle_category VARCHAR(20) NOT NULL
+                    CHECK (vehicle_category IN ('small_van','medium_truck','large_truck','tipper')),
+  status          VARCHAR(24) NOT NULL DEFAULT 'searching'
+                    CHECK (status IN ('draft','searching','assigned','driver_arriving',
+                                     'arrived_pickup','loading','in_transit','arrived_dropoff',
+                                     'completed','rated','cancelled_client','cancelled_driver',
+                                     'expired','disputed')),
+  -- Localisation départ (obligatoire) / arrivée (optionnelle si waste_removal)
+  pickup_address  TEXT NOT NULL,
+  pickup_lat      NUMERIC(9,6) NOT NULL,
+  pickup_lng      NUMERIC(9,6) NOT NULL,
+  pickup_geom     geography(Point,4326) NOT NULL,
+  dropoff_address TEXT,
+  dropoff_lat     NUMERIC(9,6),
+  dropoff_lng     NUMERIC(9,6),
+  dropoff_geom    geography(Point,4326),
+  distance_km     NUMERIC(6,1),                   -- itinéraire estimé
+  -- Détails de prestation
+  floor_from      SMALLINT NOT NULL DEFAULT 0,
+  floor_to        SMALLINT,
+  has_elevator_from BOOLEAN NOT NULL DEFAULT FALSE,
+  has_elevator_to   BOOLEAN NOT NULL DEFAULT FALSE,
+  porters_count   SMALLINT NOT NULL DEFAULT 0 CHECK (porters_count BETWEEN 0 AND 10),
+  volume_note     TEXT,                            -- ex: "salon + 1 chambre"
+  client_comment  TEXT,
+  has_fragile_items BOOLEAN NOT NULL DEFAULT FALSE,
+  needs_disassembly BOOLEAN NOT NULL DEFAULT FALSE,
+  -- Prix
+  estimated_price_dzd INTEGER,                    -- proposé par l'app
+  final_agreed_price_dzd INTEGER,                 -- prix de l'offre acceptée
+  price_floor_dzd INTEGER,
+  price_cap_dzd   INTEGER,
+  -- Temporel
+  scheduled_at    TIMESTAMPTZ,                    -- immédiat si NULL
+  search_expires_at TIMESTAMPTZ NOT NULL,         -- now() + 15 min
+  assigned_at     TIMESTAMPTZ,
+  started_at      TIMESTAMPTZ,                    -- loading
+  completed_at    TIMESTAMPTZ,
+  cancelled_at    TIMESTAMPTZ,
+  cancellation_reason TEXT,
+  cancelled_by    VARCHAR(10) CHECK (cancelled_by IN ('client','driver','system','admin')),
+  -- Divers
+  payment_method  VARCHAR(10) NOT NULL DEFAULT 'cash',
+  wilaya_code     SMALLINT NOT NULL REFERENCES wilayas(code),
+  offers_count    SMALLINT NOT NULL DEFAULT 0,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT chk_dropoff_required
+    CHECK (service_type = 'waste_removal' OR (dropoff_lat IS NOT NULL AND dropoff_lng IS NOT NULL))
+);
+CREATE INDEX idx_rides_status_created ON rides(status, created_at DESC);
+CREATE INDEX idx_rides_client ON rides(client_id, created_at DESC);
+CREATE INDEX idx_rides_driver ON rides(driver_id, created_at DESC);
+CREATE INDEX idx_rides_pickup_geom ON rides USING GIST (pickup_geom);
+CREATE INDEX idx_rides_searching ON rides(search_expires_at) WHERE status = 'searching';
+
+CREATE TABLE ride_offers (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ride_id         UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
+  driver_id       UUID NOT NULL REFERENCES driver_profiles(user_id),
+  vehicle_id      UUID REFERENCES vehicles(id),
+  price_dzd       INTEGER NOT NULL CHECK (price_dzd > 0),
+  eta_minutes     SMALLINT,
+  porters_offered SMALLINT NOT NULL DEFAULT 0,
+  message         TEXT,
+  status          VARCHAR(16) NOT NULL DEFAULT 'pending'
+                    CHECK (status IN ('pending','accepted','rejected','withdrawn','expired')),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  responded_at    TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX uq_offer_ride_driver ON ride_offers(ride_id, driver_id)
+  WHERE status IN ('pending','accepted');
+CREATE INDEX idx_offers_ride ON ride_offers(ride_id, price_dzd);
+
+CREATE TABLE ride_status_events (
+  id              BIGSERIAL PRIMARY KEY,
+  ride_id         UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
+  from_status     VARCHAR(24),
+  to_status       VARCHAR(24) NOT NULL,
+  actor           VARCHAR(10) NOT NULL CHECK (actor IN ('client','driver','admin','system')),
+  actor_id        UUID,
+  lat             NUMERIC(9,6),
+  lng             NUMERIC(9,6),
+  metadata        JSONB,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_status_events_ride ON ride_status_events(ride_id, created_at);
+
+CREATE TABLE ride_media (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ride_id         UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
+  uploaded_by     UUID NOT NULL REFERENCES users(id),
+  kind            VARCHAR(12) NOT NULL CHECK (kind IN ('photo','voice_note','document')),
+  file_key        TEXT NOT NULL,
+  mime_type       TEXT NOT NULL,
+  size_bytes      INTEGER NOT NULL,
+  duration_sec    SMALLINT,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_media_ride ON ride_media(ride_id);
+
+CREATE TABLE chat_messages (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ride_id         UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
+  sender_id       UUID NOT NULL REFERENCES users(id),
+  kind            VARCHAR(10) NOT NULL CHECK (kind IN ('text','voice','photo','system')),
+  body            TEXT,
+  file_key        TEXT,
+  duration_sec    SMALLINT,
+  read_at         TIMESTAMPTZ,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_chat_ride_created ON chat_messages(ride_id, created_at);
+
+CREATE TABLE ride_ratings (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ride_id         UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
+  rater_id        UUID NOT NULL REFERENCES users(id),
+  ratee_id        UUID NOT NULL REFERENCES users(id),
+  rater_role      VARCHAR(8) NOT NULL CHECK (rater_role IN ('client','driver')),
+  stars           SMALLINT NOT NULL CHECK (stars BETWEEN 1 AND 5),
+  tags            TEXT[],                          -- ['ponctuel','soigneux','prix_juste']
+  comment         TEXT,
+  is_hidden       BOOLEAN NOT NULL DEFAULT FALSE,  -- masqué par la modération
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (ride_id, rater_role)
+);
+
+CREATE TABLE disputes (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ride_id         UUID NOT NULL REFERENCES rides(id),
+  opened_by       UUID NOT NULL REFERENCES users(id),
+  category        VARCHAR(24) NOT NULL
+                    CHECK (category IN ('price','damage','no_show','rudeness','app_bug','other')),
+  description     TEXT NOT NULL,
+  status          VARCHAR(16) NOT NULL DEFAULT 'open'
+                    CHECK (status IN ('open','in_review','resolved','rejected')),
+  resolution_note TEXT,
+  assigned_admin  UUID,
+  resolved_at     TIMESTAMPTZ,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE driver_positions (
+  driver_id       UUID NOT NULL,
+  recorded_at     TIMESTAMPTZ NOT NULL,
+  lat             NUMERIC(9,6) NOT NULL,
+  lng             NUMERIC(9,6) NOT NULL,
+  heading         SMALLINT,
+  speed_kmh       SMALLINT,
+  accuracy_m      SMALLINT,
+  PRIMARY KEY (driver_id, recorded_at)
+) PARTITION BY RANGE (recorded_at);
+-- Partitions créées automatiquement par job (J+1) ; purge à J+90.
+
+-- ============ ADMIN & AUDIT ============
+CREATE TABLE admin_users (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email           TEXT NOT NULL UNIQUE,
+  password_hash   TEXT NOT NULL,                  -- argon2id
+  full_name       TEXT NOT NULL,
+  role            VARCHAR(16) NOT NULL CHECK (role IN ('super_admin','admin','support')),
+  is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+  totp_secret     TEXT,                           -- 2FA obligatoire pour super_admin
+  last_login_at   TIMESTAMPTZ,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE audit_logs (
+  id              BIGSERIAL PRIMARY KEY,
+  admin_id        UUID REFERENCES admin_users(id),
+  actor_type      VARCHAR(10) NOT NULL CHECK (actor_type IN ('admin','system','user')),
+  action          VARCHAR(48) NOT NULL,           -- ex: driver.approve, payment.approve
+  entity_type     VARCHAR(24) NOT NULL,
+  entity_id       UUID,
+  before          JSONB,
+  after           JSONB,
+  ip              INET,
+  user_agent      TEXT,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_audit_entity ON audit_logs(entity_type, entity_id);
+CREATE INDEX idx_audit_created ON audit_logs(created_at DESC);
+
+CREATE TABLE pricing_rules (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  wilaya_code     SMALLINT REFERENCES wilayas(code),
+  vehicle_category VARCHAR(20) NOT NULL,
+  service_type    VARCHAR(20),                    -- NULL = toutes
+  base_fare_dzd   INTEGER NOT NULL,
+  per_km_dzd      INTEGER NOT NULL,
+  per_floor_dzd   INTEGER NOT NULL DEFAULT 0,
+  porter_unit_dzd INTEGER NOT NULL DEFAULT 0,
+  min_price_dzd   INTEGER NOT NULL,
+  cap_multiplier  NUMERIC(3,2) NOT NULL DEFAULT 2.50,
+  is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+  valid_from      DATE NOT NULL DEFAULT CURRENT_DATE,
+  valid_to        DATE,
+  UNIQUE (wilaya_code, vehicle_category, service_type, valid_from)
+);
+
+CREATE TABLE app_settings (
+  key             TEXT PRIMARY KEY,
+  value           JSONB NOT NULL,
+  updated_by      UUID,
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+4.3.2 Module inter-wilaya (tables additionnelles)
+-- Matrice des axes : 58 × 58 wilayas. Source de vérité des distances et des prix de référence.
+CREATE TABLE route_matrix (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  from_wilaya     SMALLINT NOT NULL REFERENCES wilayas(code),
+  to_wilaya       SMALLINT NOT NULL REFERENCES wilayas(code),
+  distance_km     INTEGER NOT NULL,                -- distance routière (API directions)
+  duration_min    INTEGER,
+  is_active       BOOLEAN NOT NULL DEFAULT FALSE,  -- axe ouvert commercialement
+  ref_price_small_van     INTEGER,
+  ref_price_medium_truck  INTEGER,
+  ref_price_large_truck   INTEGER,
+  ref_price_tipper        INTEGER,
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (from_wilaya, to_wilaya)
+);
+CREATE INDEX idx_route_active ON route_matrix(from_wilaya, to_wilaya) WHERE is_active;
+
+-- Demande de devis inter-wilaya : table dédiée, ne pollue pas `rides`.
+CREATE TABLE intercity_requests (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  request_code    TEXT NOT NULL UNIQUE,            -- LMX-2026-001204
+  client_id       UUID NOT NULL REFERENCES users(id),
+  status          VARCHAR(24) NOT NULL DEFAULT 'collecting'
+                    CHECK (status IN ('draft','collecting','quoted','booked','in_progress',
+                                      'completed','rated','cancelled_client','cancelled_driver',
+                                      'expired','disputed')),
+  service_type    VARCHAR(20) NOT NULL
+                    CHECK (service_type IN ('moving','freight','waste_removal')),
+  vehicle_category VARCHAR(20) NOT NULL
+                    CHECK (vehicle_category IN ('small_van','medium_truck','large_truck','tipper')),
+  from_wilaya     SMALLINT NOT NULL REFERENCES wilayas(code),
+  to_wilaya       SMALLINT NOT NULL REFERENCES wilayas(code),
+  pickup_address  TEXT NOT NULL,  pickup_lat NUMERIC(9,6), pickup_lng NUMERIC(9,6),
+  dropoff_address TEXT NOT NULL, dropoff_lat NUMERIC(9,6), dropoff_lng NUMERIC(9,6),
+  distance_km     INTEGER,
+  -- Planification
+  preferred_date  DATE NOT NULL,
+  date_flexibility VARCHAR(12) NOT NULL DEFAULT 'fixed'
+                    CHECK (date_flexibility IN ('fixed','plus_minus_1','plus_minus_3','flexible')),
+  time_slot       VARCHAR(12) NOT NULL DEFAULT 'morning'
+                    CHECK (time_slot IN ('morning','afternoon','evening','any')),
+  -- Volume et options
+  floor_from      SMALLINT NOT NULL DEFAULT 0,
+  floor_to        SMALLINT NOT NULL DEFAULT 0,
+  has_elevator_from BOOLEAN NOT NULL DEFAULT FALSE,
+  has_elevator_to   BOOLEAN NOT NULL DEFAULT FALSE,
+  porters_count   SMALLINT NOT NULL DEFAULT 0 CHECK (porters_count BETWEEN 0 AND 6),
+  needs_disassembly BOOLEAN NOT NULL DEFAULT FALSE,
+  needs_packing   BOOLEAN NOT NULL DEFAULT FALSE,
+  volume_m3_est   NUMERIC(5,1),
+  volume_note     TEXT,
+  client_comment  TEXT,
+  -- Prix
+  ref_price_dzd   INTEGER NOT NULL,
+  price_floor_dzd INTEGER NOT NULL,               -- 0,85 × ref
+  price_cap_dzd   INTEGER NOT NULL,               -- 1,80 × ref
+  client_budget_dzd INTEGER,
+  agreed_price_dzd INTEGER,
+  -- Engagement et acompte déclaré (jamais traité financièrement par la plateforme)
+  deposit_declared_dzd INTEGER NOT NULL DEFAULT 0,
+  deposit_method  VARCHAR(16) CHECK (deposit_method IN ('ccp','baridimob','none')),
+  deposit_paid_at TIMESTAMPTZ,
+  client_committed_at TIMESTAMPTZ,
+  driver_id       UUID REFERENCES driver_profiles(user_id),
+  vehicle_id      UUID REFERENCES vehicles(id),
+  -- Fenêtres et jalons
+  quotes_open_until TIMESTAMPTZ NOT NULL,          -- now() + 48 h
+  quotes_count    SMALLINT NOT NULL DEFAULT 0,
+  booked_at       TIMESTAMPTZ,
+  loading_at      TIMESTAMPTZ,
+  completed_at    TIMESTAMPTZ,
+  cancelled_at    TIMESTAMPTZ, cancellation_reason TEXT,
+  cancelled_by    VARCHAR(10) CHECK (cancelled_by IN ('client','driver','system','admin')),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT chk_ic_axis_differs CHECK (from_wilaya <> to_wilaya)
+);
+CREATE INDEX idx_ic_status ON intercity_requests(status, preferred_date);
+CREATE INDEX idx_ic_axis   ON intercity_requests(from_wilaya, to_wilaya, status);
+CREATE INDEX idx_ic_client ON intercity_requests(client_id, created_at DESC);
+CREATE INDEX idx_ic_driver ON intercity_requests(driver_id, preferred_date DESC);
+
+CREATE TABLE intercity_quotes (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  request_id      UUID NOT NULL REFERENCES intercity_requests(id) ON DELETE CASCADE,
+  driver_id       UUID NOT NULL REFERENCES driver_profiles(user_id),
+  vehicle_id      UUID REFERENCES vehicles(id),
+  price_dzd       INTEGER NOT NULL,
+  available_date  DATE NOT NULL,
+  time_slot       VARCHAR(12) NOT NULL DEFAULT 'morning',
+  porters_included SMALLINT NOT NULL DEFAULT 0,
+  includes_packing BOOLEAN NOT NULL DEFAULT FALSE,
+  includes_disassembly BOOLEAN NOT NULL DEFAULT FALSE,
+  is_groupage     BOOLEAN NOT NULL DEFAULT FALSE,  -- chargement partagé
+  is_empty_return BOOLEAN NOT NULL DEFAULT FALSE,  -- profite d'un retour à vide
+  message         TEXT,
+  status          VARCHAR(16) NOT NULL DEFAULT 'pending'
+                    CHECK (status IN ('pending','countered','accepted','rejected',
+                                      'withdrawn','expired')),
+  client_counter_price_dzd INTEGER,                -- contre-proposition unique du client
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  responded_at    TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX uq_ic_quote ON intercity_quotes(request_id, driver_id)
+  WHERE status IN ('pending','countered','accepted');
+
+-- Couverture déclarée par le chauffeur : remplace le rayon GPS pour l'inter-wilaya.
+CREATE TABLE driver_coverage (
+  driver_id       UUID NOT NULL REFERENCES driver_profiles(user_id) ON DELETE CASCADE,
+  from_wilaya     SMALLINT NOT NULL REFERENCES wilayas(code),
+  to_wilaya       SMALLINT REFERENCES wilayas(code),   -- NULL = toutes destinations
+  PRIMARY KEY (driver_id, from_wilaya, to_wilaya)
+);
+
+-- Retours à vide : principal levier de prix bas sur les longs trajets (§8.5).
+CREATE TABLE empty_return_declarations (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  driver_id       UUID NOT NULL REFERENCES driver_profiles(user_id) ON DELETE CASCADE,
+  from_wilaya     SMALLINT NOT NULL REFERENCES wilayas(code),
+  to_wilaya       SMALLINT NOT NULL REFERENCES wilayas(code),
+  depart_date     DATE NOT NULL,
+  available_m3    NUMERIC(5,1),
+  max_weight_kg   INTEGER,
+  is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_empty_return_axis ON empty_return_declarations(from_wilaya, to_wilaya, depart_date)
+  WHERE is_active;
+Généralisation des tables de preuve. ride_media, chat_messages, ride_ratings et disputes deviennent polymorphes : ajout de parent_type (ride | intercity_request) et parent_id. Migration : ALTER TABLE ride_media ADD COLUMN parent_type VARCHAR(20) NOT NULL DEFAULT 'ride'; puis renommage de ride_id en parent_id. Aucune duplication de tables n’est acceptée.
+4.4 Règles d’intégrité et de calcul
+•	rides.final_agreed_price_dzd est immuable après assigned (toute modification passe par un dispute ou une action admin tracée).
+•	driver_profiles.rating_avg est recalculé par trigger ou job à partir de ride_ratings (moyenne pondérée des 200 dernières notes ; les notes < 3 sans commentaire sont incluses, les notes marquées is_hidden exclues).
+•	rides.ride_code généré par séquence annuelle (LM-{année}-{séquence 6 chiffres}).
+•	Un chauffeur ne peut pas avoir deux courses en statut actif simultanément (contrainte applicative + index unique partiel sur rides(driver_id) où statut actif).
+•	Les médias sont stockés en bucket privé ; l’accès se fait par URL signée de 15 minutes générée par l’API.
+4.5 Volumétrie et rétention
+Donnée	Volumétrie estimée (an 1)	Rétention
+rides	~60 000 lignes	Illimitée
+ride_offers	~250 000	Illimitée
+driver_positions	~150 M lignes (80 chauffeurs × 60 s)	90 jours, partitionné
+chat_messages	~1,5 M	Illimitée (médias purgés à 24 mois)
+Photos KYC	~3 000 fichiers	Durée de vie du compte + 1 an
+Photos de course	~200 000 fichiers (≈ 60 Go)	12 mois puis purge (sauf litige)
+intercity_requests	~4 000 / an	Illimitée
+intercity_quotes	~30 000 / an	Illimitée
+route_matrix	3 364 lignes (58 × 58)	Permanente, distances recalculées annuellement
+________________________________________
+5. Spécification de l’API (REST + WebSocket)
+5.1 Conventions générales
+•	Base URL : https://api.<domaine>/api/v1.
+•	Authentification : Authorization: Bearer <access_token> (JWT RS256, durée de vie 15 min) + refresh_token (opaque, 60 jours, rotation à chaque usage, révocation en base).
+•	Content-Type : application/json; charset=utf-8, sauf upload (multipart/form-data).
+•	Pagination : ?limit=20&cursor=<opaque> (curseur, pas d’offset), réponse { "data": [...], "next_cursor": "..." }.
+•	Filtrage / tri : ?status=active&sort=-created_at.
+•	Format d’erreur normalisé :
+{
+  "error": {
+    "code": "RIDE_ALREADY_ASSIGNED",
+    "message": "Cette course a déjà été attribuée.",
+    "message_ar": "تم إسناد هذه الرحلة بالفعل.",
+    "details": { "ride_id": "..." },
+    "request_id": "req_01H..."
+  }
+}
+•	Codes HTTP : 200/201/204 succès, 400 validation, 401 non authentifié, 403 interdit (rôle/abonnement), 404, 409 conflit d’état, 422 règle métier, 429 quota, 500/503.
+•	Idempotence : en-tête Idempotency-Key (UUID client) requis sur POST /rides, POST /rides/{id}/accept-bid, POST /subscription-payments.
+•	Versionnage : /v1 figé ; tout changement cassant → /v2. Champs additifs autorisés sans changement de version.
+•	Rate limiting (par IP + par utilisateur) : POST /auth/otp/request 3/15 min/téléphone + 10/h/IP ; autres routes 120 req/min/utilisateur ; uploads 30/h/utilisateur.
+5.2 Authentification & OTP
+Méthode	Route	Rôle	Description
+POST	/auth/register	public	Crée un compte (rôle client ou driver) + crée le profil associé.
+POST	/auth/otp/request	public	Envoie un code OTP par SMS.
+POST	/auth/otp/verify	public	Vérifie le code, retourne les jetons.
+POST	/auth/refresh	refresh	Rotation des jetons.
+POST	/auth/logout	auth	Révoque le refresh token courant.
+POST	/auth/logout-all	auth	Révoque toutes les sessions.
+PATCH	/me/phone	auth	Changement de numéro (OTP sur l’ancien et le nouveau).
+DELETE	/me	auth	Suppression de compte (anonymisation, cf. §12.6).
+POST /auth/register
+{
+  "phone": "+213661234567",
+  "role": "driver",
+  "full_name": "Karim Benali",
+  "locale": "fr",
+  "wilaya_code": 16,
+  "accepted_terms": true,
+  "accepted_terms_version": "2026-11-01"
+}
+→ 201 { "user_id": "...", "otp_sent": true, "next_step": "verify_otp" }
+POST /auth/otp/request
+{ "phone": "+213661234567", "purpose": "login" }
+→ 200 { "sent": true, "expires_in": 300, "retry_after": 60, "method": "sms" } Règles : code 5 chiffres, validité 5 min, 5 tentatives max, 1 envoi / 60 s, 5 envois / heure. En environnement de recette, le code est 00000 et journalisé (jamais en production).
+POST /auth/otp/verify
+{ "phone": "+213661234567", "code": "48213", "device": { "platform": "android", "push_token": "fcm...", "app_version": "1.0.0" } }
+→ 200
+{
+  "access_token": "eyJ...",
+  "refresh_token": "rt_...",
+  "expires_in": 900,
+  "user": { "id": "...", "role": "driver", "full_name": "Karim Benali", "locale": "fr",
+            "driver_gate": { "status": "pending_review", "subscription": "trial_active", "can_receive_rides": false } }
+}
+driver_gate est la clé de lecture de l’app Chauffeur : un seul objet qui dit si le chauffeur peut recevoir des courses et pourquoi.
+5.3 Profil client
+Méthode	Route	Description
+GET	/me	Profil complet + agrégats (nb courses, note).
+PATCH	/me	Nom, email, locale, wilaya.
+GET	/me/addresses	Adresses favorites.
+POST	/me/addresses	Ajout (label, adresse, lat, lng).
+DELETE	/me/addresses/{id}	Suppression.
+GET	/me/rides	Historique paginé, ?status=completed.
+GET	/me/stats	Compteurs client (courses, dépenses estimées).
+5.4 Chauffeur — onboarding & KYC
+Méthode	Route	Description
+GET	/driver/onboarding	État d’avancement (étapes 1→5) + pièces manquantes.
+PATCH	/driver/profile	Wilaya, bio, véhicule principal.
+POST	/driver/vehicles	Créer un véhicule (category, marque, plaque, année, charge, volume).
+PATCH	/driver/vehicles/{id}	Modifier.
+POST	/media/upload-url	Obtenir une URL pré-signée d’upload S3 (voir §5.10).
+POST	/driver/documents	Déclarer un document uploadé (doc_type, file_key, expires_on).
+DELETE	/driver/documents/{id}	Supprimer un document rejeté non encore revu.
+POST	/driver/submit	Soumettre le dossier pour revue → pending_review.
+Règles de soumission (POST /driver/submit) — refus 422 DOSSIER_INCOMPLET avec la liste des manques : 1. Téléphone vérifié. 2. Nom complet renseigné. 3. Au moins 1 véhicule actif avec catégorie valide. 4. Documents obligatoires : license (en cours de validité), vehicle_registration, insurance, vehicle_photo_plate. 5. Acceptation du contrat chauffeur (versionnée).
+POST /driver/documents
+{ "doc_type": "insurance", "file_key": "kyc/2026/uuid.jpg", "mime_type": "image/jpeg",
+  "size_bytes": 412000, "expires_on": "2027-04-30" }
+→ 201 { "id": "...", "status": "uploaded" }
+GET /driver/onboarding → exemple
+{
+  "steps": [
+    { "key": "phone_verified", "label_fr": "Téléphone vérifié", "done": true },
+    { "key": "identity", "label_fr": "Identité", "done": true },
+    { "key": "vehicle", "label_fr": "Véhicule", "done": true },
+    { "key": "documents", "label_fr": "Documents", "done": false,
+      "missing": ["insurance"], "rejected": [ { "doc_type": "vehicle_registration", "reason": "Photo illisible" } ] },
+    { "key": "submit", "label_fr": "Validation", "done": false }
+  ],
+  "can_submit": false,
+  "overall_status": "pending_documents"
+}
+5.5 Chauffeur — disponibilité et réception des demandes
+Méthode	Route	Description
+POST	/driver/availability	{ "is_online": true } → met à jour Redis GEO + statut.
+GET	/driver/gate	Vérifie les droits : { "can_receive_rides": bool, "reason": "subscription_expired" }.
+GET	/driver/nearby-rides	Liste de secours (fallback push) des demandes actives dans un rayon.
+POST	/driver/positions	Batch de positions (voir §5.9).
+GET	/driver/offers	Mes offres en cours et leur statut.
+GET	/driver/earnings	N/A en v1 (pas de commission) → statistiques personnelles déclaratives uniquement.
+GET	/driver/rides	Historique des courses du chauffeur.
+GET	/driver/stats	Courses du jour/semaine, note, taux d’acceptation, taux d’annulation.
+POST /driver/availability — règles de refus (403)
+{ "error": { "code": "SUBSCRIPTION_EXPIRED",
+  "message": "Votre abonnement a expiré. Renouvelez pour recevoir des courses.",
+  "message_ar": "انتهى اشتراكك. يرجى التجديد لاستقبال الطلبات.",
+  "details": { "expired_on": "2026-11-10", "renew_url": "/driver/subscription/payments" } } }
+Un chauffeur ne peut passer is_online = true que si : status = approved et abonnement active (ou grace avec bandeau d’avertissement).
+5.6 Courses (côté client)
+Méthode	Route	Description
+POST	/rides/estimate	Estimation de prix + distance sans créer la course.
+POST	/rides	Créer et publier une demande.
+GET	/rides/{id}	Détail + offres + statut.
+GET	/rides/{id}/offers	Offres reçues (temps réel par WS en complément).
+POST	/rides/{id}/accept-bid	Accepter une offre → attribution.
+POST	/rides/{id}/cancel	Annuler (motif obligatoire après attribution).
+PATCH	/rides/{id}/status	Transitions côté client (uniquement cancel et confirm_delivery).
+POST	/rides/{id}/rating	Noter le chauffeur.
+POST	/rides/{id}/dispute	Ouvrir un litige.
+GET	/rides/{id}/messages	Historique chat.
+POST	/rides/{id}/messages	Envoyer texte / note vocale / photo.
+POST	/rides/{id}/share-token	Générer un lien de partage de suivi (famille).
+POST /rides/estimate
+{ "service_type": "moving", "vehicle_category": "medium_truck",
+  "pickup": { "lat": 35.6971, "lng": -0.6308, "address": "Rue Larbi Ben M'hidi, Oran" },
+  "dropoff": { "lat": 35.7110, "lng": -0.6410, "address": "Es Senia, Oran" },
+  "floor_from": 3, "floor_to": 0,
+  "has_elevator_from": false, "has_elevator_to": true,
+  "porters_count": 2 }
+→ 200
+{
+  "estimated_price_dzd": 14500,
+  "price_floor_dzd": 11000,
+  "price_cap_dzd": 22000,
+  "distance_km": 8.4,
+  "duration_min_est": 35,
+  "breakdown": [
+    { "label_fr": "Prise en charge", "amount_dzd": 4000 },
+    { "label_fr": "Distance (8,4 km)", "amount_dzd": 4200 },
+    { "label_fr": "Étage (3e sans ascenseur)", "amount_dzd": 1500 },
+    { "label_fr": "2 manutentionnaires", "amount_dzd": 4800 }
+  ],
+  "currency": "DZD",
+  "disclaimer_fr": "Estimation indicative. Le prix final est celui de l'offre que vous acceptez ; paiement en espèces au chauffeur.",
+  "disclaimer_ar": "تقدير إرشادي. السعر النهائي هو سعر العرض الذي تقبله، والدفع نقداً للسائق."
+}
+POST /rides
+{
+  "service_type": "waste_removal",
+  "vehicle_category": "tipper",
+  "pickup": { "lat": 35.6971, "lng": -0.6308, "address": "Chantier, Bir El Djir, Oran" },
+  "dropoff": null,
+  "floor_from": 0, "floor_to": null,
+  "has_elevator_from": false, "has_elevator_to": false,
+  "porters_count": 1,
+  "volume_note": "Environ 3 m3 de gravats + vieux mobilier",
+  "client_comment": "Accès camion difficile, rue étroite",
+  "has_fragile_items": false,
+  "needs_disassembly": false,
+  "scheduled_at": null,
+  "media_ids": ["uuid-photo-1", "uuid-photo-2"],
+  "estimated_price_dzd": 18000
+}
+→ 201
+{
+  "id": "9f1c...",
+  "ride_code": "LM-2026-004512",
+  "status": "searching",
+  "search_expires_at": "2026-11-18T14:35:00Z",
+  "notified_drivers": 7,
+  "estimated_price_dzd": 18000,
+  "message_fr": "Votre demande est envoyée à 7 chauffeurs autour de vous.",
+  "message_ar": "تم إرسال طلبك إلى 7 سائقين قريبين منك."
+}
+Règles de publication - service_type = waste_removal ⇒ dropoff optionnel ; si absent, l’app affiche « destination : décharge / lieu à convenir ». - scheduled_at : immédiat si null ; si renseigné, la demande ne part en diffusion qu’à scheduled_at - 60 min (job planifié) — option phase 2, à confirmer. - Maximum 6 photos par demande, chacune ≤ 300 Ko après compression client. - notified_drivers borné à 15 (les 15 plus proches éligibles), pour limiter le bruit. - search_expires_at = now() + 15 min ; prolongation automatique une seule fois de 15 min si 0 offre (settings.ride_extend_enabled).
+POST /rides/{id}/accept-bid
+{ "offer_id": "uuid" }
+→ 200 { "ride": { "status": "assigned", "driver": { ... } } } Erreurs : 409 OFFER_ALREADY_TAKEN (course prise par un autre client — impossible ici mais utile pour l’attribution concurrente), 409 OFFER_EXPIRED, 409 RIDE_NOT_SEARCHING.
+Transitions côté client : le client ne peut jamais passer une course en completed. Seul le chauffeur (ou l’admin) peut clôturer ; le client peut confirm_delivery (optionnel, utile en cas de litige) et cancel tant que loading n’est pas atteint (après, annulation = litige).
+5.7 Chauffeur — traitement et exécution
+Méthode	Route	Description
+GET	/rides/{id}	Détail complet d’une demande reçue (photos, étages, distance).
+POST	/rides/{id}/offers	Accepter l’estimation ou contre-proposer.
+DELETE	/offers/{id}	Retirer son offre (withdrawn).
+POST	/rides/{id}/accept-assignment	(si attribution automatique activée)
+PATCH	/rides/{id}/status	Transitions chauffeur.
+POST	/rides/{id}/no-show	Déclarer le client absent (après 15 min sur place, preuve photo).
+POST /rides/{id}/offers
+{ "price_dzd": 16000, "eta_minutes": 25, "porters_offered": 1,
+  "message": "Disponible maintenant, camion benne 3,5 t." }
+→ 201 { "id": "...", "status": "pending" } Validations : - price_dzd DOIT être dans [price_floor_dzd × 0.85, price_cap_dzd] sinon 422 PRICE_OUT_OF_RANGE (les bornes sont affichées dans l’app : « prix conseillé 18 000 DA, fourchette 15 300 – 45 000 DA »). - Un chauffeur ne peut avoir qu’une offre pending par course (index unique partiel). - Un chauffeur ne peut offrir que sur les courses searching de sa wilaya et dans un rayon ≤ 25 km du point de départ (paramétrable). - Un chauffeur en course active ne peut pas offrir (409 DRIVER_BUSY). - Nombre max d’offres par chauffeur et par jour : 40 (anti-spam).
+PATCH /rides/{id}/status
+{ "to_status": "arrived_pickup", "lat": 35.6971, "lng": -0.6308 }
+Transitions autorisées (voir §7) : assigned → driver_arriving → arrived_pickup → loading → in_transit → arrived_dropoff → completed. Chaque transition écrit un ride_status_event et diffuse ride.status.changed sur ride:{id} + client:{client_id}.
+Règle des transitions « géofencées » : arrived_pickup exige une position à ≤ 300 m du point de départ ; arrived_dropoff exige ≤ 300 m du point d’arrivée (si renseigné) — sinon 422 TOO_FAR_FROM_POINT avec possibilité de forcer côté admin. Vérification effectuée côté serveur avec la dernière position connue si la position transmise manque.
+5.8 Abonnement chauffeur
+Méthode	Route	Description
+GET	/driver/subscription	Statut, dates, jours restants, historique.
+GET	/driver/subscription/payments	Mes paiements soumis + statuts.
+POST	/driver/subscription/payments	Soumettre un justificatif BaridiMob/CCP.
+POST	/driver/subscription/redeem	Utiliser un code voucher.
+GET	/vouchers/instructions	Coordonnées bancaires/CCP + mode d’emploi (paramétrable admin).
+GET /driver/subscription
+{
+  "status": "grace",
+  "kind": "trial",
+  "starts_on": "2026-10-20",
+  "ends_on": "2026-11-18",
+  "grace_until": "2026-11-21",
+  "days_left": 3,
+  "amount_dzd": 1000,
+  "can_receive_rides": true,
+  "pending_payment": { "id": "...", "method": "baridimob", "submitted_at": "2026-11-17T09:12:00Z" },
+  "instructions": { "ccp": "0023456789 clé 45", "holder": "SARL ...", "amount_dzd": 1000,
+                    "reference_hint": "Indiquez votre numéro de téléphone en référence." }
+}
+POST /driver/subscription/payments
+{ "method": "baridimob", "amount_dzd": 1000, "reference": "BM-774512",
+  "proof_file_key": "payments/2026/uuid.jpg", "period_days": 30 }
+→ 201 { "id": "...", "status": "pending", "message_fr": "Reçu envoyé. Validation sous 24 h ouvrées." } Règles : 1 seul paiement pending à la fois par chauffeur (409 PAYMENT_ALREADY_PENDING) ; montant minimum = settings.subscription_price_dzd ; le justificatif est obligatoire pour baridimob|ccp ; cash_agency réservé à l’admin.
+POST /driver/subscription/redeem
+{ "code": "LM-2026-XXXX-XXXX" }
+→ 200 { "subscription": { "status": "active", "ends_on": "2026-12-18" } } Erreurs : 404 VOUCHER_NOT_FOUND, 409 VOUCHER_ALREADY_USED, 410 VOUCHER_EXPIRED. Règle : le rachat prolonge à partir de max(today, ends_on).
+5.9 Positions GPS (batch)
+POST /driver/positions
+{ "points": [
+  { "ts": "2026-11-18T14:02:10Z", "lat": 35.6971, "lng": -0.6308, "heading": 90, "speed_kmh": 34, "accuracy_m": 12 },
+  { "ts": "2026-11-18T14:02:20Z", "lat": 35.6974, "lng": -0.6311, "heading": 95, "speed_kmh": 30, "accuracy_m": 15 }
+]}
+→ 204. Maximum 60 points par requête ; les points de plus de 10 min sont ignorés (sauf course active) ; accuracy_m > 100 marquée comme non fiable et non diffusée au client.
+5.10 Médias
+Workflow en 3 temps (obligatoire, aucune donnée binaire dans l’API) :
+1.	POST /media/upload-url → { "upload_url": "...", "file_key": "...", "expires_in": 600, "max_size": 5242880, "accepted": ["image/jpeg","image/png","audio/m4a"] }
+2.	Le client PUT le fichier directement sur S3 (progression locale, reprise possible).
+3.	POST /media/confirm → { "file_key": "...", "mime_type": "image/jpeg", "size_bytes": 412000, "kind": "photo", "ride_id": "uuid|null" } → 201 { "media_id": "...", "url": "<signed>" }
+Règles : bucket privé ; antivirus/magic-bytes check ; images re-encodées serveur (suppression EXIF dont GPS pour les photos de course, conservation des dimensions ≤ 1600 px) ; audio ≤ 60 s en .m4a AAC 32 kbps mono (≤ 400 Ko).
+5.11 Notifications
+Méthode	Route	Description
+POST	/devices	Enregistrer/mettre à jour le token push.
+DELETE	/devices/{id}	Désinscription.
+GET	/notifications	Boîte de notifications in-app (paginée).
+PATCH	/notifications/{id}/read	Marquer comme lue.
+GET	/notifications/settings	Préférences (push on/off, sons).
+5.12 Administration (préfixe /admin)
+Authentification séparée : email + mot de passe (argon2id) + 2FA TOTP obligatoire pour super_admin, JWT 30 min, sessions révocables, IP allowlist optionnelle.
+Méthode	Route	Rôle min.	Description
+POST	/admin/auth/login	—	Email + mot de passe.
+POST	/admin/auth/2fa	—	Vérification TOTP.
+GET	/admin/dashboard	support	KPI globaux (cf. §11.2).
+GET	/admin/drivers	support	Liste filtrable (statut, wilaya, abonnement, note).
+GET	/admin/drivers/{id}	support	Fiche complète (docs, véhicules, historique, abonnements).
+POST	/admin/drivers/{id}/approve	admin	Valide le compte.
+POST	/admin/drivers/{id}/reject	admin	Rejet avec motif obligatoire (notifié au chauffeur).
+POST	/admin/drivers/{id}/suspend	admin	Suspension temporaire.
+POST	/admin/drivers/{id}/block	admin	Blocage définitif.
+POST	/admin/drivers/{id}/unblock	admin	Réactivation.
+GET	/admin/documents/{id}/url	support	URL signée courte pour consulter une pièce KYC (accès tracé).
+POST	/admin/documents/{id}/review	admin	{ "status": "approved"|"rejected", "note": "..." }.
+GET	/admin/payments	support	File des justificatifs (?status=pending).
+POST	/admin/payments/{id}/approve	admin	Valide → crée/prolonge l’abonnement de 30 j.
+POST	/admin/payments/{id}/reject	admin	Rejet motivé.
+POST	/admin/subscriptions/manual	admin	Octroi manuel de X jours (gratuité, geste commercial).
+GET	/admin/vouchers / POST	admin	Générer un lot de codes (CSV).
+GET	/admin/rides	support	Toutes les courses filtrables.
+GET	/admin/rides/{id}	support	Détail complet + timeline + médias.
+POST	/admin/rides/{id}/force-status	admin	Correction de statut (tracée, motif obligatoire).
+GET	/admin/disputes / POST /admin/disputes/{id}/resolve	admin	Gestion des litiges.
+GET	/admin/audit-logs	super_admin	Journal d’audit filtrable.
+GET/PUT	/admin/settings	super_admin	Prix de l’abonnement, rayons, bornes de prix, textes légaux.
+GET	/admin/pricing-rules / CRUD	super_admin	Grille tarifaire par wilaya/catégorie.
+GET	/admin/export/{type}.csv	admin	Export courses / chauffeurs / paiements (asynchrone si > 10 000 lignes).
+5.13 Événements WebSocket
+Poignée de main : wss://api.<domaine>/ws?token=<access_token> (JWT vérifié ; refus si expiré → l’app rafraîchit puis retente).
+Événement (serveur → client)	Payload	Destinataire
+ride.request.nearby	{ ride_id, distance_km, service_type, vehicle_category, pickup_address, estimated_price_dzd, photos: [url], expires_at }	driver:{id}
+ride.request.taken	{ ride_id } (retirer de la liste)	drivers notifiés
+bid.created	{ ride_id, offer: { id, driver: {name, rating, photo_url}, vehicle: {...}, price_dzd, eta_minutes } }	client:{id}
+bid.updated	{ offer_id, status }	client + driver
+bid.accepted	{ ride_id, client: {...}, pickup, dropoff }	driver:{id}
+bid.rejected	{ ride_id, reason }	driver:{id}
+ride.status.changed	{ ride_id, status, at, actor }	ride:{id}
+driver.position	{ driver_id, lat, lng, heading, speed_kmh, ts } (throttle 10 s)	ride:{id} (client)
+chat.message	{ ride_id, message }	ride:{id}
+subscription.updated	{ status, ends_on, days_left }	driver:{id}
+admin.metric.tick	{ active_rides, online_drivers, pending_payments }	admin:dashboard
+
+Événement (client → serveur)	Payload	Note
+join	{ rooms: ["ride:uuid"] }	Vérification d’appartenance.
+driver.position.push	{ lat, lng, heading, speed_kmh }	Repli si le POST batch échoue.
+typing	{ ride_id }	Optionnel.
+Robustesse réseau : reconnexion exponentielle (1 s → 30 s max), pingInterval 25 s, file locale des messages sortants (chat, positions) rejouée à la reconnexion, since pour rattraper les événements manqués (GET /rides/{id}/events?since=).
+________________________________________
+5.14 Parcours inter-wilaya — endpoints additionnels
+Méthode	Route	Rôle	Description
+GET	/intercity/routes?from=31&to=16	auth	Axe actif : distance, durée, prix de référence par catégorie
+POST	/intercity/estimate	client	Estimation sans publication (même payload que la création)
+POST	/intercity/requests	client	Publier une demande de devis
+GET	/intercity/requests/{id}	client + chauffeur retenu	Détail, devis reçus, jalons
+POST	/intercity/requests/{id}/quotes	chauffeur	Soumettre un devis
+POST	/intercity/quotes/{id}/counter	client	Contre-proposition (1 seul tour autorisé)
+POST	/intercity/quotes/{id}/respond-counter	chauffeur	Accepter / refuser la contre-proposition
+POST	/intercity/quotes/{id}/accept	client	Retenir l’offre → statut booked
+POST	/intercity/requests/{id}/cancel	client	Annuler (règles §7.4)
+POST	/intercity/requests/{id}/deposit	client	Déclarer un acompte versé (preuve, sans traitement financier)
+PATCH	/intercity/requests/{id}/status	chauffeur	in_progress (chargement), completed (livré)
+POST	/intercity/requests/{id}/price-revision	chauffeur	Demander une révision sur place (plafond §8.6)
+GET	/driver/intercity/opportunities	chauffeur	Demandes correspondant à sa couverture
+GET/POST/DELETE	/driver/coverage	chauffeur	Déclarer ses axes de couverture
+GET/POST/DELETE	/driver/empty-returns	chauffeur	Déclarer un retour à vide
+POST /intercity/requests — requête
+{
+  "service_type": "moving",
+  "vehicle_category": "medium_truck",
+  "from": { "wilaya_code": 31, "address": "Es Senia, Oran", "lat": 35.6479, "lng": -0.6217 },
+  "to":   { "wilaya_code": 16, "address": "Bab Ezzouar, Alger", "lat": 36.7200, "lng": 3.1830 },
+  "preferred_date": "2026-12-05",
+  "date_flexibility": "plus_minus_1",
+  "time_slot": "morning",
+  "floor_from": 2, "floor_to": 4,
+  "has_elevator_from": false, "has_elevator_to": true,
+  "porters_count": 2,
+  "needs_disassembly": true,
+  "needs_packing": false,
+  "volume_note": "F3 complet : salon, 2 chambres, cuisine, électroménager",
+  "client_budget_dzd": 35000,
+  "media_ids": ["uuid1", "uuid2", "uuid3"]
+}
+Réponse 201
+{
+  "id": "…", "request_code": "LMX-2026-001204", "status": "collecting",
+  "distance_km": 432,
+  "ref_price_dzd": 39500,
+  "price_range": { "min": 33575, "max": 71100 },
+  "quotes_open_until": "2026-11-20T14:00:00Z",
+  "notified_drivers": 34,
+  "message_fr": "Votre demande est envoyée à 34 chauffeurs couvrant Oran → Alger. Vous recevrez des devis sous 48 h.",
+  "message_ar": "تم إرسال طلبك إلى 34 سائقاً يغطون خط وهران - الجزائر. ستتلقى العروض خلال 48 ساعة."
+}
+Règles de validation - preferred_date ≥ J+1 et ≤ J+60 (intercity_min_lead_days / max_lead_days). - from_wilaya ≠ to_wilaya (sinon : utiliser le parcours urbain). - 2 photos minimum obligatoires (contre 1 en urbain), 8 maximum. - Axe is_active = true, sinon 422 AXIS_NOT_OPEN. - Une seule demande collecting ou quoted par client à la fois.
+POST /intercity/requests/{id}/quotes — requête
+{
+  "price_dzd": 36000,
+  "available_date": "2026-12-05",
+  "time_slot": "morning",
+  "porters_included": 2,
+  "includes_disassembly": true,
+  "is_groupage": false,
+  "is_empty_return": true,
+  "message": "Camion 3,5 t, chargement le 5 au matin, livraison le soir même."
+}
+Validations : price_dzd dans [price_floor_dzd ; price_cap_dzd] sinon 422 PRICE_OUT_OF_RANGE ; available_date dans la fenêtre de souplesse déclarée par le client sinon 422 DATE_NOT_COMPATIBLE ; une seule offre active par chauffeur et par demande ; 10 devis/jour/chauffeur maximum.
+6. Moteur de mise en relation et d’offres (bidding)
+6.1 Sélection des chauffeurs notifiés
+Algorithme exécuté à la création de la course (et relancé par job si notified_drivers < 3) :
+1. CANDIDATS = GEOSEARCH drivers:online FROMLONLAT pickup BYRADIUS R km ASC COUNT 60
+2. FILTRES (SQL) :
+     driver_profiles.status = 'approved'
+     driver_profiles.is_online = true
+     subscription valide (active | grace)   -- sinon exclu
+     wilaya_code = ride.wilaya_code
+     véhicule actif de catégorie = ride.vehicle_category (ou catégorie supérieure acceptée*)
+     aucun ride actif en cours
+     pas de blocage client↔chauffeur (table blocked_pairs)
+     driver_id ∉ refus récents du même client (30 derniers jours)
+3. SCORE = 0.55 × proximité + 0.25 × note_normalisée + 0.20 × taux_acceptation
+4. TOP 15 → notification push + WS simultanés
+5. Si aucune correspondance de catégorie exacte : élargir à la catégorie supérieure,
+   puis élargir le rayon R (10 → 15 → 25 km) selon settings.radius_ladder_km
+R par défaut = 15 km (paramétrable par wilaya).
+6.2 Cycle de vie des offres
+Étape	Comportement
+Création	Statut pending, notification immédiate au client, rides.offers_count++.
+Affichage client	Tri par prix croissant (défaut) ; affichage du nom, photo, note, nb de courses, type de véhicule, ETA, prix.
+Modification	Un chauffeur PEUT retirer son offre (withdrawn) et en soumettre une nouvelle tant que la course est searching.
+Acceptation	Transaction SERIALIZABLE : verrou SELECT ... FOR UPDATE sur rides ; si status != 'searching' → 409. Les autres offres passent rejected dans la même transaction.
+Expiration	À search_expires_at, toutes les offres pending → expired, course → expired. Notification client « aucune offre, relancez ou modifiez ».
+Anti-collusion	Si le même chauffeur et le même client échangent > 5 courses en 30 jours avec des prix systématiquement au plafond, alerte admin (audit / rapport).
+6.3 Attribution automatique (option, désactivée par défaut)
+settings.auto_assign_enabled = false. Si activée : à la première offre tombant dans [estimated × 0.9, estimated × 1.15] et si le client ne répond pas en 90 s, l’offre est acceptée automatiquement. Non recommandé en v1 (risque juridique et d’insatisfaction) ; documenté pour une v2 « achat immédiat ».
+6.4 Notifications push (spécification)
+Déclencheur	Destinataire	Titre FR / AR	Action au tap
+Nouvelle demande à proximité	chauffeur	« Nouvelle course à 4,2 km » / « طلب جديد على بعد 4.2 كم »	Ouvrir le détail de la demande
+Nouvelle offre	client	« 3 offres reçues » / « 3 عروض »	Ouvrir la liste des offres
+Offre acceptée	chauffeur	« Course confirmée » / « تم تأكيد الرحلة »	Ouvrir la course
+Offre refusée	chauffeur	« Offre non retenue » / « لم يتم اختيار عرضك »	Ouvrir l’historique
+Abonnement J-7 / J-3 / J-1 / expiré	chauffeur	« Abonnement expire dans 3 jours »	Ouvrir l’écran abonnement
+Paiement validé / rejeté	chauffeur	« Abonnement activé jusqu’au 18/12 »	Ouvrir l’écran abonnement
+Compte validé / rejeté	chauffeur	« Votre compte est activé »	Ouvrir l’app
+Message chat	les deux	« Nouveau message »	Ouvrir le chat
+Payload FCM (data + notification) — exemple :
+{
+  "notification": { "title": "Nouvelle course à 4,2 km", "body": "Déménagement · 18 000 DA · maintenant" },
+  "data": { "type": "ride_request", "ride_id": "uuid", "deep_link": "app://rides/uuid", "silent": "false" },
+  "android": { "priority": "high", "notification": { "channel_id": "rides", "sound": "ride_alert" } },
+  "apns": { "payload": { "aps": { "sound": "ride_alert.caf", "interruption-level": "time-sensitive" } } }
+}
+Contraintes : canal Android rides en importance HIGH avec sonnerie forte et vibration (exigence fonctionnelle du CDC) ; respect du mode Ne pas déranger ; notification silencieuse data-only pour les mises à jour de position/statut.
+________________________________________
+6.5 Diffusion spécifique aux trajets inter-wilaya
+Le rayon GPS est inopérant sur un axe de 400 km : un chauffeur d’Oran ne « reçoit » pas une demande à Alger. La diffusion s’appuie donc sur la couverture déclarée et sur l’historique d’axe.
+1. AXE = (from_wilaya, to_wilaya)
+2. CANDIDATS = union de :
+     a) couverture déclarée : (from_wilaya → to_wilaya) ou (from_wilaya → NULL)
+     b) retour à vide actif sur l'axe, à ±3 jours de la date souhaitée
+     c) chauffeurs de to_wilaya ayant déjà réalisé ≥ 1 trajet sur cet axe
+3. FILTRES (SQL) :
+     driver_profiles.status = 'approved' · abonnement actif (active | grace)
+     catégorie de véhicule ≥ catégorie demandée
+     pas de trajet inter-wilaya en cours · date disponible compatible
+     pas de blocage client ↔ chauffeur · pas de refus récent du même client
+4. SCORE = 0,35 × note_intercity + 0,25 × expérience_axe + 0,20 × réactivité
+           + 0,20 × compatibilité_date
+5. NOTIFIER les 40 premiers (paramètre `intercity_notified_drivers_max`)
+6. Relance à J+1 (push) si `quotes_count < 3`, puis prolongation de 24 h unique
+   à l'expiration si aucune offre (`intercity_quote_extend_hours`)
+Blocage de disponibilité. Un chauffeur booked sur le 05/12 est retiré de la diffusion des courses urbaines pendant la fenêtre du trajet (intercity_driver_block_hours, défaut 24 h autour de la date, jour de chargement et jour de livraison inclus si l’axe dépasse 300 km). Sans ce blocage, le système produit mécaniquement des no-shows.
+Demande ciblée. Un client peut, en complément, solliciter jusqu’à 5 chauffeurs nommément couvrant l’axe (« demande directe »). Ces chauffeurs reçoivent une notification prioritaire. Cela reproduit le comportement réel du marché (le client rappelle un chauffeur qu’il connaît) tout en gardant la trace dans l’application.
+Notifications spécifiques
+Déclencheur	Destinataire	Message
+Nouvelle demande sur axe couvert	chauffeur	« Oran → Alger · 5 déc. · F3 · 39 500 DA de référence »
+Premier devis reçu	client	« 1er devis reçu : 36 000 DA »
+24 h sans devis	client	« Aucune offre pour l’instant — élargir la date ou le véhicule ? »
+Devis accepté	chauffeur	« Trajet confirmé le 5 déc. — client : 0661… »
+J-7 et J-1	les deux	Rappel date, adresse, créneau, montant, acompte
+J+1 sans démarrage	les deux + admin	Alerte stale_intercity (écran §11.7)
+Retour à vide correspondant	chauffeur	« Un client cherche Oran → Alger le 5 déc. ; vous rentrez à vide ce jour-là »
+7. Machine à états des courses
+7.1 Diagramme
+                    ┌─────────┐
+                    │  draft  │ (optionnel : brouillon local, jamais persisté en v1)
+                    └────┬────┘
+                         │ POST /rides
+                         ▼
+                   ┌───────────┐  accept-bid   ┌──────────┐
+                   │ searching │──────────────►│ assigned │
+                   └─────┬─────┘               └────┬─────┘
+       expire (15 min)   │       cancel (client)    │ driver_arriving
+              ┌──────────┘                          ▼
+              ▼                              ┌──────────────────┐
+        ┌───────────┐                        │ driver_arriving  │
+        │  expired  │                        └────────┬─────────┘
+        └───────────┘                        arrived_pickup ▼
+                                            ┌──────────────────┐
+                                            │  arrived_pickup  │
+                                            └────────┬─────────┘
+                                              loading ▼
+                                            ┌──────────────────┐
+                                            │     loading      │  ← annulation possible avant ce point
+                                            └────────┬─────────┘
+                                             in_transit ▼
+                                            ┌──────────────────┐
+                                            │    in_transit    │  ← annulation = litige
+                                            └────────┬─────────┘
+                                        arrived_dropoff ▼
+                                            ┌──────────────────┐
+                                            │ arrived_dropoff  │
+                                            └────────┬─────────┘
+                                              completed ▼
+                                            ┌──────────────────┐
+                                            │    completed     │
+                                            └────────┬─────────┘
+                                               rated ▼
+                                            ┌──────────────────┐
+                                            │      rated       │
+                                            └──────────────────┘
+
+Branches transverses : cancelled_client, cancelled_driver, disputed, no_show (→ cancelled_driver + preuve)
+7.2 Table de transitions (matrice d’autorisation)
+Depuis	Vers	Acteur	Conditions
+searching	assigned	client	Une offre pending valide, course non expirée.
+searching	cancelled_client	client	Libre. Notification aux chauffeurs ayant offert.
+searching	expired	system	now() > search_expires_at.
+assigned	driver_arriving	chauffeur	—
+assigned/driver_arriving	cancelled_client	client	Motif obligatoire. Impact compteur client.
+assigned/driver_arriving	cancelled_driver	chauffeur	Motif obligatoire ; impact taux d’annulation ; ≥ 3 annulations/30 j → alerte admin.
+driver_arriving	arrived_pickup	chauffeur	Position ≤ 300 m du départ (ou override admin).
+arrived_pickup	loading	chauffeur	—
+loading	in_transit	chauffeur	Chargement terminé. Point de non-retour contractuel.
+loading	disputed	client	Litige sur le volume/prix → figée pour investigation.
+in_transit	arrived_dropoff	chauffeur	Position ≤ 300 m du point d’arrivée (si défini).
+in_transit/arrived_dropoff	completed	chauffeur	Après arrived_dropoff (ou directement si waste_removal sans destination).
+completed	rated	client	Après notation complète.
+completed	disputed	client	Dans les 72 h.
+*	force-*	admin	Tracé, motif obligatoire, notifie les deux parties.
+7.3 Règles complémentaires
+•	Une seule course active par chauffeur et une seule course active par client (au-delà : refus 409).
+•	Timeout d’inactivité : si une course assigned n’a aucune transition pendant 30 min, job d’alerte admin (stale_ride).
+•	No-show client : chauffeur sur place depuis 15 min → no-show avec photo du lieu + position ; la course passe cancelled_driver avec cancellation_reason = 'client_no_show' et le client voit son compteur « absences » augmenter (3 absences → contact support).
+•	Annulation tardive côté client (après loading) : autorisée uniquement via litige, avec indemnité librement négociée entre les parties (la plateforme ne prélève rien, elle constate).
+•	Clôture automatique : une course in_transit sans activité depuis 12 h → completed forcée par le système uniquement si les deux parties ne répondent pas, avec marquage auto_closed = true et notification.
+________________________________________
+7.4 Machine à états du parcours inter-wilaya
+  draft ──publish──► collecting ──(≥ 1 devis)──► quoted ──accept──► booked
+                        │                          │                  │
+              (48 h sans devis)            (client annule)      (rappel J-1)
+                        ▼                          ▼                  ▼
+                     expired             cancelled_client     in_progress
+                                                                     │
+                                                                completed ──► rated
+Depuis	Vers	Acteur	Conditions
+draft	collecting	client	Date ≥ J+1, adresses complètes, ≥ 2 photos, CGU longue distance acceptées
+collecting	quoted	system	Première offre valide reçue
+collecting	expired	system	now() > quotes_open_until sans offre (1 prolongation de 24 h possible)
+quoted	booked	client	Offre pending valide, date compatible, acompte déclaré si exigé (§8.6)
+quoted	cancelled_client	client	Libre tant qu’aucune offre n’est acceptée
+booked	cancelled_client	client	Sans pénalité jusqu’à J-2 ; après J-2 : pénalité réputationnelle
+booked	cancelled_driver	chauffeur	Sans pénalité jusqu’à J-3 ; après J-3 : alerte admin + impact note d’engagement
+booked	in_progress	chauffeur	Le jour J, au chargement (loading_at renseigné)
+in_progress	completed	chauffeur	Livraison effectuée + confirmation client (recommandée)
+in_progress	disputed	client	Litige ouvert dans les 72 h
+completed	rated	client	Notation (note distincte de la note urbaine, §7.5)
+7.5 Notation : deux notes, jamais une seule
+Un déménagement Oran→Alger et une course de 6 km ne mesurent pas la même compétence. Le chauffeur porte donc deux notes séparées :
+Note	Calcul	Affichage
+rating_avg (urbain)	Moyenne des courses urbaines terminées	Fiche chauffeur urbaine
+rating_intercity_avg (longue distance)	Moyenne des trajets inter-wilaya terminés	Fiche chauffeur inter-wilaya
+Si un chauffeur n’a aucune note dans une catégorie, l’app affiche « Nouveau sur ce type de trajet » et non une note issue de l’autre catégorie — ne jamais laisser croire à une expérience qui n’existe pas. Un chauffeur dont rating_intercity_avg < 3,5 après 3 trajets est retiré de la diffusion inter-wilaya (contrôle qualité).
+8. Tarification, engagement et abonnements
+Le CDC d’origine ne précise pas la formule d’estimation. Elle est obligatoire pour l’écran de commande ; voici la spécification proposée, entièrement pilotée par pricing_rules et modifiable depuis l’admin sans redéploiement.
+8.1 Formule d’estimation
+PRIX_ESTIMÉ = base_fare
+            + per_km × distance_km_itinéraire
+            + per_floor × max(0, floor_sans_ascenseur)
+            + porter_unit × porters_count
+            + majoration_service
+Paramètre	Valeurs initiales proposées (DZD) — à valider par le métier
+base_fare — petit utilitaire	2 500
+base_fare — camion moyen	4 000
+base_fare — grand camion	6 000
+base_fare — benne	6 500
+per_km (toutes catégories)	500 (petit utilitaire), 700 (moyen), 900 (grand/benne)
+per_floor (par étage sans ascenseur)	500
+porter_unit (par manutentionnaire)	2 400
+majoration_service — déménagement	× 1,0
+majoration_service — déchets/gravats	× 1,0 + forfait 3 000 (mise en décharge)
+majoration_service — marchandises	× 0,9
+min_price	4 000
+cap_multiplier (plafond d’offre)	2,5 × estimation
+Exemples de calcul (avec itinéraire de 8,4 km, 3e étage sans ascenseur, 2 porteurs, camion moyen, déménagement) : 4 000 + (700 × 8,4 = 5 880) + (500 × 3 = 1 500) + (2 400 × 2 = 4 800) = 16 180 → arrondi au 500 supérieur = 16 500 DA. Fourchette affichée = [floor = 0,85 × est., cap = 2,5 × est.] → [14 000 ; 41 250].
+Arrondis : au multiple de 500 le plus proche. Aucune décimale. Distance : distance routière (API directions), pas vol d’oiseau ; si l’API directions échoue → distance_haversine × 1,35 en secours, avec mention « estimation approximative ».
+8.2 Affichage et transparence
+•	L’app affiche une fourchette plutôt qu’un prix ferme (protection juridique) : « Prix estimé 16 500 DA (généralement 14 000 à 20 000 DA selon le volume réel) ».
+•	Mention obligatoire : « Le prix est un accord direct entre vous et le chauffeur. Paiement en espèces. Aucune commission prélevée par la plateforme. »
+•	Le client peut saisir son propre budget (client_budget_dzd, champ optionnel) ; les chauffeurs le voient et proposent en conséquence.
+8.3 Abonnement chauffeur — règles détaillées
+Élément	Règle
+Prix	settings.subscription_price_dzd = 1000 (modifiable, avec historique des changements).
+Essai	30 jours offerts à compter de la validation du compte (pas de l’inscription) — décision proposée : comptage à partir de approved_at, sinon un dossier en revue 3 semaines consomme l’essai.
+Cycle	Périodes successives de 30 jours ; ends_on inclus → « actif jusqu’au 18/12 inclus ».
+Tolérance	3 jours de grâce (grace) pendant lesquels le chauffeur reste opérationnel avec bandeau rouge + notification quotidienne.
+Expiration	Au-delà : expired → is_online forcé à false, notifications de course stoppées immédiatement, écran bloquant non contournable.
+Renouvellement anticipé	Autorisé n’importe quand : la nouvelle période démarre à max(today, ends_on) + 1.
+Validation	baridimob/ccp : validation manuelle par l’admin (objectif < 24 h ouvrées, SLA affiché). voucher : instantané.
+Cumul	Un chauffeur PEUT cumuler plusieurs paiements validés → prolongations successives (max 365 jours d’avance).
+Remboursement	Hors périmètre applicatif (traité hors plateforme).
+Voucher	Code 16 caractères (LM-2026-XXXX-XXXX), usage unique, validité paramétrable, lot exportable en CSV avec QR code (option).
+Agent commercial	Option : un agent_code peut être requis pour certains vouchers (traçabilité des ventes de cartes prépayées).
+8.4 Règles de blocage liées à l’abonnement
+•	is_online = true refusé si subscription.status = expired.
+•	Si l’abonnement expire pendant une course : la course en cours est terminée normalement (ne jamais abandonner un client), puis blocage.
+•	/driver/nearby-rides retourne 403 si expiré.
+•	Les offres déjà soumises sur des courses actives restent valides 15 min (le temps de la demande), mais aucune nouvelle offre n’est acceptée.
+________________________________________
+8.5 Tarification des trajets inter-wilaya
+Formule
+PRIX_RÉF = base_categorie + (DA_km_categorie × distance_routière)
+           + 2 500 × porters_count
+           + 700 × étages_sans_ascenseur
+           + 2 500 si démontage/remontage
+           + 4 000 si emballage
+           × coefficient_axe (défaut 1,00 ; 1,15 sur axes isolés/désertiques)
+Grille de base (DZD) — cohérente avec le référentiel observé de 50 à 100 DA/km (§20) :
+Catégorie de véhicule	Base	DA/km	Exemple Oran → Alger (432 km)
+Petit utilitaire (fourgon, 800 kg)	4 000	45	23 500 DA
+Camion moyen (3,5 t, ~12 m³)	6 000	55	30 000 DA
+Grand camion (6–10 t, 25 m³)	9 000	75	41 500 DA
+Benne (gravats)	8 000	70	38 500 DA
+Ordres de grandeur par axe depuis Oran (distances routières, à recalculer via l’API d’itinéraire avant mise en production) :
+Axe	≈ km	Camion moyen	Grand camion
+Oran → Sidi Bel Abbès	90	11 000 DA	16 000 DA
+Oran → Mostaganem	80	10 500 DA	15 000 DA
+Oran → Tlemcen	140	14 000 DA	19 500 DA
+Oran → Relizane	130	13 000 DA	18 500 DA
+Oran → Alger	432	30 000 DA	41 500 DA
+Oran → Béchar	580	38 000 DA	52 500 DA
+Oran → Sétif	660	42 500 DA	58 500 DA
+Oran → Constantine	760	48 000 DA	66 000 DA
+Règles d’encadrement des offres
+Règle	Valeur
+Fourchette autorisée	[0,85 × PRIX_RÉF ; 1,80 × PRIX_RÉF]
+Retour à vide déclaré	Jusqu’à −25 % sous le prix de référence, badge « Retour à vide » affiché au client
+Groupage déclaré	−20 à −35 %, mention obligatoire : « votre chargement partagera le camion ; départ confirmé si le camion est complet »
+Arrondi	Multiple de 500 DA
+Distance	Distance routière réelle ; secours = haversine × 1,35 avec mention « estimation approximative »
+Justification du plafond à 1,80× (et non 2,50× comme en urbain) : les montants sont 5 à 10 fois plus élevés, une offre abusive coûte donc beaucoup plus cher au client. Le prix plancher protège symétriquement le client (contre les promesses non tenues) et le chauffeur sérieux (contre la concurrence déloyale de ceux qui sous-évaluent puis renégocient ou abandonnent).
+Justification économique du plancher — Oran → Alger en 3,5 t, calcul de coût de revient : gasoil 31 DA/L depuis janvier 2026, 20 L/100 km à l’aller + 16 L/100 km au retour à vide = 5 820 DA de carburant ; usure 2 160 DA ; 2 manutentionnaires 5 000 DA ; 2 jours d’immobilisation 10 000 DA → ≈ 23 000 DA de coût de revient. Toute offre inférieure à ~20 000 DA implique un groupage, un retour à vide déjà programmé, ou une promesse qui ne sera pas tenue.
+8.6 Engagement, acompte déclaré et gestion du risque (inter-wilaya)
+Le paiement reste 100 % en espèces, directement entre les parties. La plateforme n’encaisse rien, ne transfère rien, ne séquestre rien. Elle constate et horodate, ce qui est la seule protection réaliste à 400 km de distance.
+Mécanisme	Règle
+Engagement client	Case à cocher horodatée à l’acceptation : « Je m’engage sur ce prix et cette date ; en cas de désistement à moins de 48 h, mon compte sera signalé. »
+Engagement chauffeur	Idem. Désistement à moins de 72 h : penalty_count++, dégradation de la note d’engagement, 3 désistements = retrait de l’option inter-wilaya.
+Acompte déclaré	Optionnel au lancement, recommandé à 20–30 % du prix. Le client déclare l’avoir versé par CCP/BaridiMob au chauffeur, joint une photo de reçu (conservée comme preuve de litige, jamais traitée financièrement). Peut devenir obligatoire au-delà de intercity_deposit_required_above_dzd (défaut 40 000 DA).
+Renégociation sur place	Seul le volume réel peut justifier un ajustement, plafonné à +30 %, uniquement via POST /intercity/requests/{id}/price-revision, accepté par le client dans l’app. Toute modification hors application est réputée nulle.
+Médias obligatoires	≥ 2 photos au départ et ≥ 2 à l’arrivée (état des meubles et de la cargaison). Seule défense exploitable en cas de litige « casse ».
+Assurance	La plateforme n’est pas assureur. Écran d’avertissement à l’acceptation : vérifier l’assurance du véhicule ; la garantie des biens transportés n’est pas incluse dans la prestation de mise en relation.
+Blocage du chauffeur	Un chauffeur booked est retiré de la diffusion urbaine pendant la fenêtre du trajet (§6.5).
+8.7 Ce que la plateforme ne fait jamais (inter-wilaya)
+1.	Encaisser, séquestrer ou rembourser un montant de transport.
+2.	Garantir la bonne exécution de la prestation.
+3.	Imposer un prix : elle propose une référence et encadre les bornes.
+4.	Assurer les biens transportés.
+5.	Trancher un litige autrement qu’en produisant les preuves (photos, chat, horodatages, positions).
+9. Application Client — spécifications détaillées
+9.1 Arborescence des écrans
+Splash (vérification de session)
+└─ Onboarding (3 écrans, 1 seule fois) → Choix langue FR/AR
+└─ Auth
+   ├─ Saisie téléphone (+213 préfixé, masque)
+   ├─ Saisie OTP (5 chiffres, auto-submit, renvoi à 60 s)
+   └─ Complétion profil (nom, wilaya) — facultatif, skippable
+└─ Accueil (onglet 1) — choix explicite du parcours
+   ├─ Deux boutons : « En ville » / « Entre wilayas » (§9.4)
+   ├─ Cartes services (3 grandes cartes illustrées)
+   ├─ Adresse de départ (GPS / recherche / favoris)
+   └─ Bandeau « Mes courses en cours »
+└─ Tunnel de commande (4 étapes, barre de progression)
+   ├─ E1 Service + catégorie de véhicule (+ descriptif charge utile)
+   ├─ E2 Adresses (départ obligatoire, arrivée conditionnelle)
+   ├─ E3 Détails (étages, ascenseur, bras, photos, commentaire, note vocale)
+   └─ E4 Récapitulatif + prix estimé + confirmation (« Publier la demande »)
+└─ Recherche d'offres (écran d'attente animé, compteur d'offres, timer 15:00)
+   └─ Liste des offres (tri prix/note/ETA) → Fiche offre → Accepter
+└─ Suivi de course (carte plein écran + panneau coulissant)
+   ├─ Statuts + ETA
+   ├─ Boutons Appeler / Chat / Note vocale
+   ├─ Partage de suivi (lien)
+   └─ Annuler (avant chargement)
+└─ Fin de course
+   ├─ Récapitulatif + rappel paiement cash
+   ├─ Notation (étoiles + tags + commentaire)
+   ├─ Pourboire ? (NON — hors périmètre v1)
+   └─ Signaler un problème (litige)
+└─ Historique (onglet 2) → Détail d'une course passée
+└─ Profil (onglet 3)
+   ├─ Infos, adresses favorites, langue
+   ├─ Aide / FAQ / Contact support (WhatsApp + tel)
+   └─ CGU, politique de confidentialité, suppression de compte
+9.2 Détail fonctionnel par écran clé
+E1 — Choix du service. 3 cartes : Déménagement, Évacuation de déchets / gravats, Transport de marchandises. Chaque carte affiche une icône, un exemple de cas d’usage et le prix « à partir de X DA ». Le choix conditionne les champs de l’étape 3.
+E2 — Catégorie de véhicule. Cartes illustrées avec charge utile et volume (ex. « Petit utilitaire · jusqu’à 800 kg / 4 m³ », « Camion moyen · 2,5 t / 12 m³ », « Grand camion · 6 t / 25 m³ », « Benne · gravats jusqu’à 5 t »). Une aide contextuelle explique « comment choisir » avec des repères visuels (studio, F3, chantier).
+E3 — Localisation. Carte plein écran + champ de recherche (autocomplétion via geocoding, biaisée sur la wilaya). Épinglage manuel possible. Bouton « Ma position ». Pour waste_removal, le champ arrivée est masqué et remplacé par la mention « Destination : décharge (à convenir avec le chauffeur) ».
+E4 — Détails dynamiques. Champs affichés selon service_type :
+Champ	moving	waste_removal	freight
+Étage départ / arrivée	✅	✅ (départ)	✅
+Ascenseur	✅	✅	⬜
+Nombre de bras	✅ (0-3+)	✅ (0-3+)	⬜
+Photos	✅ (1 à 6, obligatoire ≥ 1)	✅ (1 à 6, obligatoire ≥ 1)	✅ (0 à 6)
+Commentaire texte	✅	✅	✅
+Note vocale (≤ 60 s)	✅	✅	✅
+Objets fragiles / démontage	✅	⬜	⬜
+Volume estimé (texte)	✅	✅	✅
+Contraintes UX de l’étape 4 : la photo est fortement encouragée (bandeau « Ajoutez une photo : vous recevrez des offres 3× plus précises ») et obligatoire pour moving et waste_removal. Compression côté client avant upload (cible 200-300 Ko, max 1600 px de large).
+Écran de recherche d’offres. Animation + timer. Affiche en temps réel le nombre d’offres reçues, la meilleure offre et le nombre de chauffeurs notifiés. Boutons : « Modifier ma demande » (annule et repart en E1 avec pré-remplissage), « Annuler ». Si 0 offre à l’expiration : propositions — élargir la catégorie de véhicule, augmenter le budget, réessayer.
+Fiche offre. Photo du véhicule (miniature), nom du chauffeur, note ★ et nombre de courses, type/véhicule + plaque partielle, prix proposé (mis en avant), ETA, nb de bras inclus, message éventuel. Boutons : Accepter (principal), Appeler (si offert par le chauffeur), Retour.
+Suivi de course. Carte + itinéraire, marqueur camion animé (positions throttle 10 s), panneau coulissant avec : statut lisible (« Le chauffeur arrive — 12 min »), boutons Appeler, Chat, Note vocale, Partager le suivi, Annuler. En in_transit : rappel « Paiement en espèces : 16 500 DA ».
+Notation. Obligatoire à la fin (peut être « plus tard » une seule fois, relance à la prochaine ouverture). 1-5 étoiles, tags rapides (« Ponctuel », « Soigneux », « Sympa », « Prix juste », « Retard »), commentaire libre facultatif. La note du client pour le chauffeur est anonyme dans son affichage mais traçable côté admin.
+9.3 Exigences techniques de l’app Client
+Exigence	Cible
+Poids APK (split ABI)	≤ 25 Mo (contrainte CDC < 30 Mo)
+Temps de démarrage à froid	≤ 2,5 s sur appareil milieu de gamme (Android 10)
+Fonctionnement hors ligne	Historique en cache, brouillon de demande local, file d’envoi des messages
+Permissions demandées	Localisation (au moment de l’usage), notifications, appareil photo, micro — chacune expliquée avant demande système
+Accessibilité	Textes ≥ 14 sp, contraste AA, cibles tactiles ≥ 48 dp, support du grossissement de police
+RTL	Bascule complète en arabe (miroir de mise en page), polices arabes embarquées (Cairo ou Noto Naskh), chiffres arabes occidentaux acceptés
+Polices	2 polices maximum, sous-ensembles FR/AR/latin chiffres
+Images	WebP, chargement paresseux, cache disque 50 Mo max
+Crash reporting	Sentry, avec désactivation de l’envoi des données personnelles
+________________________________________
+9.4 Parcours « Entre wilayas » (client)
+Point d’entrée. L’accueil propose deux boutons explicites : « En ville » et « Entre wilayas ». Ce choix est le premier écran après le choix de langue : il évite d’expliquer la différence par un texte, et il conditionne tout le tunnel.
+Étape	Écran	Contenu	Règles UX
+W1	Axe	Wilaya de départ / wilaya d’arrivée (listes, favoris, inversion en un tap), puis adresses précises (GPS ou recherche)	Seuls les axes is_active sont proposés ; message clair si l’axe n’est pas encore ouvert
+W2	Date	Calendrier à partir de J+1, créneau (matin / après-midi / soirée / indifférent), souplesse (± 1 j, ± 3 j, flexible)	La souplesse augmente mécaniquement le nombre de devis reçus : l’expliquer à l’écran
+W3	Volume	Catégorie de véhicule + 2 à 8 photos obligatoires + note vocale + options (bras, démontage, emballage, étages, ascenseurs)	Rappel : « des photos précises = des devis précis »
+W4	Prix de référence	« Prix conseillé pour cet axe : 39 500 DA » + fourchette + détail du calcul (base + km + bras)	Écran de confiance : c’est ce qui différencie l’app d’une annonce Ouedkniss
+W5	Attente	Message calme, sans animation de type VTC : « Vous recevrez des devis jusqu’à jeudi 14 h ». Compteur de devis en temps réel	Pas de pression au temps : un trajet se décide en heures, pas en secondes
+W6	Comparaison	Cartes de devis (voir ci-dessous), tri « Meilleure offre » par défaut, filtres prix / note / date	Voir règles de tri ci-dessous
+W7	Engagement	Récapitulatif : prix, date, créneau, acompte éventuel, case CGU longue distance, avertissement assurance	Horodatage client_committed_at
+W8	Suivi	Rappels J-7 et J-1, boutons Appeler / Chat / Note vocale, jalons chargé / en route / livré	Le suivi GPS continu n’a pas de sens sur 6 h de route ; seuls les jalons sont suivis
+Carte de devis — informations obligatoires
+Élément	Détail
+Prix	En très gros, avec mention « tout compris » ou liste des inclus
+Date réellement disponible	Mise en avant si différente de la date souhaitée
+Chauffeur	Nom, photo, note inter-wilaya + nombre de trajets longue distance réalisés
+Véhicule	Catégorie, photo, plaque partielle
+Inclus	Nombre de bras, démontage, emballage
+Badges	Retour à vide, Groupage, Vérifié
+Message	Texte libre du chauffeur
+Règles de tri — décision ferme - Tri par défaut : « Meilleure offre » = score combinant prix (40 %), note inter-wilaya (30 %), expérience d’axe (20 %), réactivité (10 %). - Tri « Prix le plus bas » disponible mais jamais par défaut : sur un trajet à 40 000 DA, 2 000 DA d’écart ne compensent pas un camion qui ne vient pas. - Un devis dont le prix est à plus de −30 % du prix de référence affiche un bandeau : « Prix très bas pour cet axe — vérifiez ce qui est inclus (bras, étages, groupage) ». - Aucun classement « sponsorisé » : interdit, la plateforme ne vend pas de position, c’est la contrepartie de l’abonnement.
+10. Application Chauffeur — spécifications détaillées
+10.1 Parcours d’onboarding (5 étapes bloquantes)
+Étape	Écran	Contenu	Validation serveur
+1	Téléphone	Numéro + OTP	phone_verified
+2	Identité	Nom, prénom, wilaya, photo de profil	nom non vide, wilaya active
+3	Véhicule	Catégorie, marque, modèle, plaque, année, charge utile, volume, options (hayon, rampes)	plaque au format algérien
+4	Documents	Permis, carte grise, assurance, photo du véhicule avec plaque (+ carte d’identité optionnelle) — appareil photo ou galerie, recadrage, compression, indication de la date d’expiration	4 pièces obligatoires
+5	Contrat & envoi	Récapitulatif, contrat chauffeur (scroll + case à cocher), envoi	can_submit
+Après envoi : écran d’état « Dossier en cours d’examen » avec timeline (Reçu → En examen → Validé), estimation de délai (« sous 48 h ouvrées »), et bouton « Corriger un document » si rejeté (motif affiché). Aucun accès aux courses tant que status != approved.
+10.2 Écran principal (mode disponible)
+•	Interrupteur Disponible / Indisponible très visible, avec état explicite : vert « Vous recevez des courses », rouge « Vous ne recevez rien », orange « Bloqué : abonnement expiré » (tap → écran abonnement).
+•	Bandeau abonnement en haut : « Abonnement actif — 12 jours restants » (vert), « Expire dans 3 jours » (orange), « Expiré » (rouge).
+•	Compteurs du jour : courses effectuées, offres envoyées, taux d’acceptation.
+•	Carte avec sa position et la zone de réception (rayon).
+•	Bouton Sécurité/Urgence (appel support) — option.
+10.3 Réception d’une demande
+1.	Push FCM (canal HIGH, sonnerie ride_alert, vibration) + événement WS.
+2.	Si l’app est au premier plan : écran plein de demande avec compte à rebours de 45 s pour décider, photos en grand format, distance, type de service, étages, bras demandés, prix estimé.
+3.	Boutons : « Accepter le prix » (offre au prix estimé, en un tap), « Proposer un prix » (curseur/stepper avec bornes affichées), « Ignorer ».
+4.	Si l’app est en arrière-plan : notification avec actions rapides (« Accepter » / « Voir »).
+5.	Aucune décision dans les 45 s → la demande sort de l’écran mais reste accessible dans la liste « Demandes proches » jusqu’à expiration de la course.
+Exigence forte : la sonnerie DOIT fonctionner écran verrouillé et téléphone en silencieux uniquement si le canal rides a été configuré en « ignorer le mode silencieux » — à arbitrer : respecter le mode silencieux est plus respectueux, mais le CDC exige la notification sonore. Décision proposée : sonnerie forte sauf mode « Ne pas déranger » actif, avec un tutoriel d’activation intégré.
+10.4 Exécution d’une course
+Étape	Écran	Actions	Contrôles
+Acceptée	« Aller au point de départ »	Ouvrir dans Google Maps / Waze, bouton Appeler le client, chat	—
+En route	Statut driver_arriving, position diffusée au client	—	—
+Sur place	arrived_pickup	Bouton unique « Je suis sur place »	Distance ≤ 300 m
+Chargement	loading	Chronomètre affiché (temps de chargement visible, information de transparence)	—
+En route livraison	in_transit	Navigation vers l’arrivée	—
+Sur place	arrived_dropoff	« Je suis arrivé »	Distance ≤ 300 m
+Terminé	completed	Écran : « Encaissement : 16 500 DA en espèces » + bouton Confirmer la fin de course	Confirmation explicite
+Mode « une main » : tous les boutons critiques accessibles en bas d’écran, taille ≥ 56 dp, contraste élevé (usage au soleil, gants).
+10.5 Écran abonnement
+•	Statut + date de fin + jours restants (jauge circulaire).
+•	Montant à payer (1 000 DA), coordonnées CCP/BaridiMob (copiables), consignes de référence.
+•	Bouton « Envoyer un justificatif » : sélection appareil photo/galerie, aperçu, champ référence, envoi.
+•	Historique des paiements avec statuts (En attente, Validé, Rejeté + motif).
+•	Champ « J’ai un code de recharge ».
+•	Bloc FAQ (« Pourquoi un abonnement ? », « Quand mon compte est-il bloqué ? »).
+10.6 Mode réseau dégradé (exigence critique)
+Situation	Comportement attendu
+Perte de connexion pendant la course	Bandeau « Hors ligne — les mises à jour seront envoyées dès le retour du réseau ». Les changements de statut sont mis en file et rejoués dans l’ordre.
+Position non envoyable	Mise en buffer local (max 500 points, purge du plus ancien), envoi en batch à la reconnexion.
+Changement de statut concurrent (déjà fait ailleurs)	Le serveur renvoie l’état courant → l’app se synchronise silencieusement, sans écraser.
+Repli sans WebSocket	Polling GET /rides/{id} toutes les 15 s + GET /driver/nearby-rides toutes les 30 s.
+Consommation data	< 5 Mo par course de 2 h (cible) ; compression des réponses, pas d’images en pleine résolution.
+Batterie	Pause de la géolocalisation si immobile > 2 min (hors course active), précision réduite hors course.
+10.7 Checklist d’onboarding matériel (à fournir aux chauffeurs)
+Document d’une page : installer l’APK, autoriser la localisation « toujours », désactiver l’optimisation de batterie du fabricant (Xiaomi/Huawei/Oppo — procédure par marque), tester la sonnerie, vérifier la 4G. Recommandation : tutoriel in-app en 4 écrans illustrés avec détection du fabricant.
+________________________________________
+10.8 Mode « Longue distance » (chauffeur)
+Onglet distinct de la disponibilité urbaine : un chauffeur peut être indisponible en ville et disponible pour un Oran→Alger le 5 décembre. Ces deux disponibilités ne doivent jamais être confondues dans l’interface ni dans les règles de diffusion.
+Fonction	Spécification
+Couverture	« Je pars de [wilaya] vers [toutes les wilayas / wilayas sélectionnées] ». Stockée dans driver_coverage. Sans déclaration, aucun trajet longue distance n’est proposé.
+Retour à vide	Déclaration : axe + date + volume disponible (m³) + poids max. Le chauffeur apparaît alors dans les demandes correspondantes avec un badge, et son offre peut descendre jusqu’à −25 % sous le prix de référence.
+Opportunités	Liste filtrée sur sa couverture : axe, distance, date, volume (photos), prix de référence, budget éventuel du client. Tri par date puis par score.
+Envoi d’un devis	Prix avec bornes affichées (« conseillé 39 500 DA, fourchette 33 575 – 71 100 DA »), date réellement disponible (champ distinct de la date souhaitée), créneau, options incluses, cases groupage / retour à vide, message.
+Contre-proposition client	Si le client propose un prix : écran dédié, accepter ou refuser en un tap. Un seul tour.
+Trajet retenu	Fiche trajet avec compte à rebours (J-7, J-1), téléphone client, adresse de chargement, checklist à cocher la veille : « camion vérifié », « bras confirmés », « client appelé ».
+Jour J	Deux boutons seulement : « Chargement effectué » → in_progress ; « Livré » → completed. Plus « Réviser le prix » si le volume réel diffère (plafond +30 %, validation client obligatoire).
+Blocage	Pendant la fenêtre du trajet, le chauffeur ne reçoit plus de courses urbaines. Il est prévenu explicitement à l’acceptation : « Vous ne recevrez pas de courses en ville du 4 au 6 décembre. »
+Fenêtre de désistement	Jusqu’à J-3 sans pénalité. Au-delà : alerte admin, impact sur la note d’engagement.
+Réseau dégradé	Les jalons in_progress/completed sont mis en file et rejoués à la reconnexion (le chauffeur peut être hors réseau en zone blanche). Même mécanisme que §10.6.
+11. Panneau d’administration — spécifications détaillées
+11.1 Navigation
+Login (email + mot de passe + 2FA)
+└─ Tableau de bord
+└─ Chauffeurs (liste / fiche / validation KYC)
+└─ Abonnements & paiements (file de validation, vouchers)
+└─ Courses (liste / détail / timeline / litiges)
+└─ Clients (liste / fiche / historique)
+└─ Litiges & support
+└─ Paramètres (tarifs, abonnement, rayons, textes légaux, comptes admin)
+└─ Journal d'audit (super_admin)
+11.2 Tableau de bord — indicateurs attendus
+Bloc	Indicateurs
+Chauffeurs	Inscrits (total), en attente de validation, validés, en ligne maintenant, abonnements expirés sous 7 j, taux d’activation
+Activité	Courses aujourd’hui / 7 j / 30 j, courses actives en temps réel, taux d’offres acceptées, temps moyen de première offre, taux d’annulation, taux de courses sans offre
+Revenus	MRR abonnements (chauffeurs actifs × 1 000 DA), encaissé validé du mois, paiements en attente (nombre + montant)
+Qualité	Note moyenne plateforme, top 5 chauffeurs, 5 chauffeurs les moins bien notés, litiges ouverts
+Graphiques	Courbe courses/jour (30 j), répartition par service (camembert), répartition par wilaya
+Alertes	Paiements en attente > 24 h, chauffeurs pending_review > 48 h, courses bloquées > 30 min, litiges > 72 h
+11.3 Fiche chauffeur (écran central de l’admin)
+Onglets : 1. Identité — nom, téléphone (avec bouton « Appeler » / « WhatsApp »), wilaya, date d’inscription, statut, historique des statuts. 2. Documents — vignettes des 4+ pièces, visionneuse plein écran avec zoom, boutons Approuver / Rejeter par pièce, champ motif (obligatoire au rejet), alerte si expires_on < today + 30 j. 3. Véhicules — catégorie, plaque, marque, photos, actif/inactif. 4. Abonnements — historique des périodes, paiements, bouton « Activer / Prolonger 30 j », bouton « Octroyer N jours » avec motif. 5. Activité — courses, taux d’acceptation/annulation, note, timeline des 20 dernières courses et offres. 6. Actions — Valider le compte, Suspendre (durée), Bloquer (motif), Débloquer. Chaque action → confirmation + notification au chauffeur + entrée audit_log.
+11.4 File de validation des paiements
+•	Liste avec miniature du reçu (clic → URL signée, accès tracé), nom du chauffeur, montant, référence saisie, date de soumission, ancienneté (« depuis 6 h »).
+•	Tri par ancienneté, filtre par méthode.
+•	Actions rapides : Valider (→ prolonge de period_days, notification immédiate), Rejeter (motif obligatoire, choix dans une liste : reçu illisible, montant incorrect, référence absente, doublon, faux reçu).
+•	Affichage de contrôle anti-doublon : si la même reference ou la même image (hash perceptuel) a déjà été soumise → bandeau d’alerte.
+•	Objectif SLA affiché : 24 h ouvrées.
+11.5 Gestion des litiges
+Vue dédiée avec : course concernée, parties, description, médias, timeline complète, historique de chat, notes du chauffeur, positions GPS enregistrées. Actions : prendre en charge, demander des informations (message in-app aux deux parties), résoudre avec note, rejeter. Toute décision est notifiée aux deux parties.
+11.6 Exigences techniques de l’admin
+•	Responsive (utilisable sur tablette), tableaux avec tri/filtre/pagination serveur, colonnes configurables.
+•	Export CSV asynchrone avec notification de disponibilité.
+•	Aucune donnée sensible en clair dans les URL ; URLs signées de 5 min pour les documents.
+•	Journalisation de chaque consultation de document KYC (accès tracé : qui, quand, quel document).
+•	Session inactive → déconnexion à 30 min ; 2FA obligatoire pour super_admin.
+________________________________________
+11.7 Supervision du parcours inter-wilaya
+Écran	Contenu	Actions
+Trajets inter-wilaya	Liste filtrable : axe, date, statut, prix convenu, chauffeur, client, âge de la demande	Ouvrir la fiche, forcer un statut (tracé), annuler au nom d’une partie
+Demandes sans devis	Demandes expired ou collecting avec < 2 devis après 24 h	Diagnostic : axe inactif ? aucun chauffeur couvrant ? catégorie indisponible ? Contacter les chauffeurs de l’axe
+Axes et couverture	Tableau des axes : nombre de demandes, taux de devis, prix moyen constaté vs prix de référence	Ajuster le prix de référence d’un axe (route_matrix) sans redéploiement
+Retours à vide	Déclarations actives, taux de conversion (déclaration → trajet réalisé)	Suspendre une déclaration abusive
+Litiges inter-wilaya	Mêmes vues que §11.5, avec les photos départ/arrivée et l’historique des révisions de prix	Résoudre, noter la décision
+Alertes	stale_intercity (J+1 sans démarrage), désistements répétés, offres systématiquement au plafond, écart prix constaté/référence > 40 % sur un axe	Traiter, suspendre l’option longue distance d’un chauffeur
+Indicateurs ajoutés au tableau de bord : nombre de trajets inter-wilaya par mois · taux de demandes aboutissant à un devis · délai moyen du premier devis · écart moyen prix convenu / prix de référence · taux de désistement par partie · panier moyen.
+12. Sécurité, protection des données et conformité
+12.1 Authentification & autorisation
+•	OTP SMS uniquement pour les mobiles (pas de mot de passe à mémoriser) ; OTP à 5 chiffres, stocké haché, 5 tentatives max, blocage du numéro 15 min après dépassement.
+•	JWT RS256, access 15 min, refresh 60 j avec rotation et détection de réutilisation (si un refresh déjà utilisé est présenté → révocation de toute la famille de jetons).
+•	RBAC : client, driver, support, admin, super_admin; contrôle au niveau de chaque route + vérification de propriété de la ressource (ride.client_id = me.id).
+•	Admin : argon2id, politique de mot de passe ≥ 12 caractères, 2FA TOTP, rate limit 5 tentatives/15 min, IP allowlist optionnelle.
+12.2 Sécurité applicative (checklist de recette)
+Contrôle	Exigence
+Injection SQL	Requêtes paramétrées / ORM uniquement.
+Autorisation horizontale (IDOR)	Test systématique : un client A ne peut pas lire la course de B (404, pas 403).
+Upload	Vérification des magic bytes, taille max, extension ignorée, bucket privé, pas d’exécution.
+URL signées	Durée ≤ 15 min (5 min pour KYC), non partageables au-delà.
+Rate limiting	Global + par route sensible (OTP, offres, uploads).
+En-têtes	HSTS, CSP, X-Content-Type-Options, X-Frame-Options, CORS restrictif (origines admin/app connues).
+Secrets	Variables d’environnement, jamais dans le dépôt ; rotation documentée.
+Chiffrement	TLS 1.2+ obligatoire (HSTS), chiffrement au repos du disque du VPS et du bucket.
+Logs	Jamais de numéro de téléphone complet, jamais de token, jamais de code OTP en production.
+Dépendances	npm audit / flutter pub outdated en CI, pas de vulnérabilité critique au merge.
+Pentest	Test d’intrusion léger avant mise en production (OWASP Top 10).
+12.3 Données personnelles — conformité
+Le cadre applicable en Algérie est la loi n° 18-07 du 10 juin 2018 relative à la protection des personnes physiques dans le traitement des données à caractère personnel (et son décret d’application). Exigences minimales :
+1.	Registre des traitements tenu par l’éditeur (finalités : mise en relation, facturation d’abonnement, sécurité, statistiques).
+2.	Base légale : exécution du contrat + consentement explicite recueilli à l’inscription (CGU + politique de confidentialité versionnées, horodatées, avec preuve de consentement stockée).
+3.	Minimisation : ne collecter que le nécessaire. Pas de collecte de données sensibles. Pas de tracking publicitaire.
+4.	Durées de conservation : comptes actifs = durée de la relation + 12 mois ; documents KYC = durée du compte + 12 mois ; positions GPS = 90 jours ; médias de course = 12 mois (sauf litige).
+5.	Droits des personnes : accès, rectification, suppression (anonymisation), opposition — implémentés par un écran « Mes données » + procédure support sous 30 jours.
+6.	Sous-traitants : mention explicite dans la politique (hébergeur, SMS, cartographie, notifications) ; privilégier des hébergeurs avec engagement de confidentialité.
+7.	Transferts hors Algérie : à évaluer avec un conseil juridique ; à défaut d’autorisation, privilégier un hébergement local ou documenter le transfert.
+8.	Notification de violation : procédure interne de notification sous 72 h.
+⚠️ Point de vigilance à trancher par le maître d’ouvrage : l’obligation d’accomplissement des formalités préalables auprès de l’autorité nationale de protection des données doit être vérifiée avec un juriste algérien. Ce document ne constitue pas un avis juridique.
+12.4 Sécurité des personnes (terrain)
+•	Anonymisation des numéros par défaut : le client voit le numéro du chauffeur, mais les appels peuvent passer par un numéro masqué (option, coût opérateur) — hors périmètre v1, à étudier.
+•	Bouton « Signaler » dans le chat et sur la course (comportement déplacé, tentative de contournement de la plateforme).
+•	Bouton d’urgence : appel au 17/1548 + partage de position à un contact de confiance.
+•	Interdiction explicite dans les CGU de finaliser hors plateforme (contournement) — sans garantie technique totale, mais avec détection (courses annulées répétées entre les mêmes parties).
+12.5 Lutte contre la fraude (v1, pragmatique)
+Risque	Contre-mesure
+Faux justificatifs d’abonnement	Validation manuelle + détection de doublons (référence/hash d’image) + historique de fiabilité du chauffeur.
+Faux comptes chauffeurs	KYC avec 4 pièces, contrôle de cohérence plaque/carte grise, un numéro = un compte.
+Multi-comptes pour cumuler l’essai	Vérification du numéro, détection de doublons de plaque et de nom.
+Chauffeur qui accepte puis ne vient pas	Taux d’annulation visible, seuil 3/30 j → alerte + suspension.
+Notes gonflées	Notes liées à des courses réellement terminées uniquement.
+Contournement de l’abonnement	Positions et offres impossibles sans abonnement actif ; journal d’accès.
+12.6 Suppression de compte (spécification)
+1.	Demande dans l’app (avec confirmation par OTP).
+2.	Si courses actives → refus jusqu’à clôture.
+3.	Anonymisation sous 30 jours : users.phone_e164 remplacé par un identifiant technique, nom/email purgés, documents KYC supprimés du bucket, médias de course supprimés. Les courses restent (anonymisées) pour les statistiques et la traçabilité comptable.
+4.	Confirmation par email/SMS si un canal existe.
+________________________________________
+13. Contraintes « marché algérien » : performance, réseau, langues
+13.1 Budget de performance applicatif
+Métrique	Cible
+P95 latence API (hors upload)	< 400 ms
+P99 latence API	< 900 ms
+Latence WebSocket event → client	< 1 s
+Temps d’affichage de la liste des offres	< 1,5 s après rafraîchissement
+Poids d’une réponse /driver/nearby-rides (10 items)	< 60 Ko
+Consommation data par course (chauffeur)	< 5 Mo / 2 h
+Poids APK	≤ 25 Mo (split ABI), ≤ 35 Mo (universel)
+13.2 Contraintes réseau
+•	Timeouts agressifs : connexion 10 s, lecture 20 s, upload 60 s avec reprise.
+•	Retry avec backoff exponentiel + jitter ; 3 tentatives max pour les lectures (idempotentes), 1 seule pour les mutations sans clé d’idempotence.
+•	Compression gzip/brotli côté API.
+•	Aucun appel bloquant au démarrage : premier écran utilisable hors ligne avec les données en cache.
+•	Détection de qualité réseau : si RTT > 800 ms → passer en mode « données réduites » (pas d’images en grand, pas d’animations lourdes).
+13.3 Internationalisation
+•	Fichiers de traduction fr.json / ar.json complets (aucune chaîne en dur), clés sémantiques.
+•	RTL : toutes les mises en page testées en miroir, icônes directionnelles inversées, Directionality gérée.
+•	Formats : montants 16 500 DA / 16 500 دج, dates 18/11/2026, nombres avec espace fine.
+•	Le darija / arabe dialectal en saisie libre doit être correctement affiché et stocké en UTF-8 (aucune translittération).
+•	Les messages d’erreur serveur sont renvoyés dans les deux langues (message + message_ar).
+13.4 Poids et frugalité
+•	Arbres de composants secoués (tree shaking), pas de librairie de cartes surdimensionnée, tuiles raster plutôt que vectorielles si pertinent.
+•	2 polices maximum, sous-ensembles de caractères.
+•	Aucune vidéo, aucune illustration > 100 Ko, pack d’icônes unique.
+•	Images distantes en WebP, dimensionnées côté serveur, cache disque.
+________________________________________
+14. Intégrations tierces
+14.1 Cartographie — arbitrage à trancher
+Option	Avantages	Inconvénients
+Google Maps Platform (Maps SDK + Directions + Geocoding)	Meilleure qualité de géocodage en Algérie (adresses informelles), navigation familière, lien direct vers Google Maps / Waze	Coût par requête ; conditions de licence sur l’affichage des tuiles ; clés à sécuriser
+Mapbox	Tarification généreuse, SDK Flutter solide, personnalisation du style	Géocodage moins bon sur les adresses non normalisées algériennes
+MapLibre + OSM / données locales	Coût quasi nul, plein contrôle	Qualité d’itinéraire et d’adressage inférieure, charge d’exploitation (tuilage)
+Recommandation : Google Maps pour le géocodage/Directions, MapLibre pour l’affichage des tuiles si le coût devient un problème. Obligation : le géocodage inverse DOIT produire une adresse lisible même en zone non nommée (fallback « près de <point d’intérêt> »), et l’utilisateur DOIT pouvoir corriger l’adresse à la main.
+Sécurité des clés : clés séparées par plateforme (Android/iOS/web), restrictions par package/bundle/referrer, quotas et alertes de budget activés.
+14.2 SMS / OTP
+•	Contrat avec un agrégateur SMS local (couverture des 3 opérateurs) ; second fournisseur en secours automatique si le premier échoue.
+•	Exigences contractuelles : routeur local, Sender ID « LALAMOVE » (soumis à approbation), délivrabilité > 95 %, API de statut de remise, coût < 5 DA/SMS négocié.
+•	Fallback : appel vocal OTP (Voice OTP) si échec de 2 envois — option.
+•	Le code OTP n’est jamais renvoyé par l’API (sauf environnement de recette).
+14.3 Notifications push
+•	FCM (Android) + APNs (iOS). Comptes, certificats et rotation documentés.
+•	Conformité : pas de contenu personnel dans le payload (pas de nom complet, pas d’adresse exacte).
+14.4 Stockage objet
+•	Bucket privé, chiffrement au repos, cycle de vie (suppression automatique à J+365 pour les médias de course), versioning désactivé.
+•	URLs signées générées côté serveur uniquement.
+14.5 Intégration WhatsApp (support)
+Lien wa.me vers un numéro support, pré-rempli avec ride_code. Aucune API WhatsApp Business en v1.
+________________________________________
+15. DevOps, environnements, CI/CD, supervision
+15.1 Environnements
+Env	Usage	Données
+local	Développement	Seed + OTP fixe 00000
+staging	Démo client, tests d’acceptation	Données fictives, OTP fixe, SMS réels désactivés
+production	Réel	Réelles, SMS actifs, backups
+Chaque environnement a ses propres secrets, sa base et son bucket. Aucun accès croisé.
+15.2 CI/CD (GitHub Actions)
+Pipeline PR : lint → typecheck → tests unitaires (couverture ≥ 70 % sur les modules rides, bids, subscriptions) → tests d’intégration (Postgres + Redis en services) → build Docker → validation OpenAPI (spectral) → flutter analyze + flutter test → verdict bloquant si échec.
+Pipeline merge sur main → build image → push registry → déploiement staging automatique → tests E2E (Playwright sur l’admin, tests d’API sur le parcours complet).
+Pipeline release (tag v1.x.x) → déploiement production (migration DB préalable, réversible, avec sauvegarde) → build APK signé (keystore sécurisé, flutter build appbundle + APK par ABI) → publication sur le Play Console (piste interne → bêta → production) → release notes.
+Zéro-downtime attendu : déploiement rolling (au moins 2 instances), migrations rétro-compatibles (expand → migrate → contract).
+15.3 Infrastructure de production (proposition de départ)
+Composant	Dimensionnement initial	Coût indicatif
+VPS applicatif (API + workers + Nginx)	2 vCPU / 4 Go / 80 Go SSD	15-25 €/mois
+VPS base de données (PostgreSQL + Redis)	2 vCPU / 4 Go / 100 Go SSD	15-25 €/mois
+Stockage objet (S3/B2/MinIO)	100 Go + egress	5-10 €/mois
+SMS OTP	~2 500 SMS/mois (inscriptions + connexions)	Variable
+Cartographie	quotas de départ	0-50 €/mois
+Sentry / uptime	plans gratuits ou 20 €/mois	0-20 €/mois
+Nom de domaine + TLS	annuel	~15 €/an
+Total plateforme		≈ 40-130 €/mois
+Backups : pg_dump chiffré quotidien conservé 30 jours + PITR (WAL) si possible, réplication du bucket hebdomadaire, test de restauration mensuel documenté (exigence de recette).
+15.4 Supervision & exploitation
+•	Healthchecks : /health (app), /health/db, /health/redis.
+•	Uptime Kuma (ou équivalent) : API, admin, WebSocket, page publique de statut (option).
+•	Sentry : erreurs back + apps + admin, alerte sur nouvelle erreur ou pic.
+•	Logs structurés JSON (niveau, request_id, user_id hashé, route, latence), rotation 14 jours.
+•	Métriques surveillées : latence P95, taux d’erreur 5xx, jobs en échec, profondeur de file BullMQ, connexions DB, mémoire Redis, nombre de chauffeurs en ligne (alerte si 0).
+•	runbook-exploitation.md : incident DB, incident SMS, incident push, restauration, rotation de secrets, expiration d’un certificat, panne d’un fournisseur.
+________________________________________
+16. Stratégie de tests et critères d’acceptation
+16.1 Niveaux de test
+Niveau	Périmètre	Outils
+Unitaire	Règles métier pures : estimation de prix, bornes d’offre, calcul de ends_on, transitions d’état	Jest / Vitest, flutter test
+Intégration API	Chaque endpoint, validation, autorisation, erreurs	Supertest + Postgres de test
+E2E API	Parcours complet client→offres→attribution→clôture→notation	Script Postman/Newman ou Playwright API
+E2E UI admin	Validation KYC, validation paiement, litige	Playwright
+Tests manuels mobiles	Appareils réels : bas de gamme Android 9, Android 13, iPhone récent ; réseau 3G bridé (Network Link Conditioner)	Checklist de recette
+Performance	Charge sur création de course + offres + positions	k6
+Sécurité	OWASP Top 10, IDOR, upload malveillant	Checklist + outil
+16.2 Cas de test critiques (extraits — à intégrer à la recette)
+#	Scénario	Résultat attendu
+T01	OTP : 6 tentatives erronées	6e refusée, numéro bloqué 15 min, message explicite
+T02	Créer une course sans photo (moving)	400 VALIDATION_ERROR sur media_ids
+T03	Créer une course waste_removal sans arrivée	Succès
+T04	Offre à 200 % du plafond	422 PRICE_OUT_OF_RANGE
+T05	Deux chauffeurs offrent, le client accepte l’un	L’autre offre → rejected, notification reçue
+T06	Accepter une offre après expiration	409 OFFER_EXPIRED
+T07	Chauffeur expiré tente is_online=true	403 SUBSCRIPTION_EXPIRED
+T08	Abonnement expire pendant une course	Course terminable, puis blocage, notification
+T09	Admin valide un paiement BaridiMob	ends_on = max(today, ends_on)+30, notification, audit_log
+T10	Voucher déjà utilisé	409 VOUCHER_ALREADY_USED
+T11	arrived_pickup à 2 km du point	422 TOO_FAR_FROM_POINT
+T12	Coupure réseau pendant in_transit, retour après 5 min	Statuts rejoués dans l’ordre, aucun statut perdu
+T13	Client A tente GET /rides/{id_de_B}	404
+T14	Note de 1 étoile	rating_avg du chauffeur recalculée, visible en admin
+T15	Suppression de compte avec course active	409 RIDE_ACTIVE
+T16	Upload d’un .jpg contenant du PHP/script	Fichier rejeté, aucune exécution
+T17	Bascule FR → AR en cours de tunnel	Écran entièrement en RTL, données conservées
+T18	3 chauffeurs en ligne, 0 offre en 15 min	Course expired, client notifié, proposition de relance
+T19	Annulation chauffeur après 3 fois en 30 j	Alerte visible en admin
+T20	Restauration d’une sauvegarde	Base restaurée en < 2 h, données cohérentes
+16.3 Critères d’acceptation de la v1 (Definition of Done)
+1.	Les 3 modules sont déployés et fonctionnels en production (APK signé, App Store soumis, admin accessible en HTTPS).
+2.	Les 20 cas de test critiques passent en recette contradictoire, sur appareils réels.
+3.	Parcours complet réalisé en conditions réelles avec au moins 5 chauffeurs et 10 courses clôturées.
+4.	Aucune vulnérabilité critique ou haute ouverte au terme de la revue de sécurité.
+5.	Documentation livrée : README, openapi.yaml, modele-donnees.md, guide admin, guide d’installation, runbook-exploitation.md, procédure de sauvegarde/restauration testée.
+6.	Code livré sur le dépôt du client avec historique Git complet, CI verte, image Docker reproductible.
+7.	Sauvegarde automatique opérationnelle et restauration vérifiée.
+8.	Monitoring et alertes actifs (erreurs, disponibilité, jobs).
+Critères d’acceptation complémentaires pour la v1.5 (inter-wilaya)
+9.	Les tests T21 à T32 passent en recette.
+10.	La matrice route_matrix est chargée sur au moins 5 axes réels depuis Oran, distances vérifiées manuellement.
+11.	3 trajets inter-wilaya réels ont été réalisés de bout en bout (devis → engagement → chargement → livraison → notation) avant ouverture commerciale.
+12.	Les écrans d’engagement, d’acompte et d’avertissement assurance ont été relus par un juriste.
+16.4 Test de charge (cible)
+Scénario	Charge	Critère
+Création de courses	5 req/s pendant 5 min	P95 < 400 ms, 0 erreur 5xx
+Offres concurrentes	20 offres/s sur 10 courses distinctes	Aucune double attribution
+Positions GPS	80 chauffeurs × 1 point/10 s (8 req/s)	0 perte, latence Redis < 10 ms
+WebSocket	200 connexions simultanées	Stabilité 30 min, reconnexions propres
+________________________________________
+16.5 Cas de test du parcours inter-wilaya
+#	Scénario	Résultat attendu
+T21	Demande Oran→Alger avec date = aujourd’hui	422 MIN_LEAD_TIME
+T22	Demande inter-wilaya avec 1 photo	400 VALIDATION_ERROR (2 photos minimum)
+T23	Devis à 7 000 DA sur un axe à 39 500 DA de référence	422 PRICE_OUT_OF_RANGE
+T24	Devis de 29 500 DA marqué « retour à vide »	Accepté, badge affiché au client
+T25	Chauffeur booked le 5/12 reçoit une course urbaine le 5/12	Non notifié (driver_blocked_intercity)
+T26	Aucun devis après 48 h	expired, proposition d’élargir la date ou la catégorie
+T27	Client annule à J-1	Accepté + pénalité réputationnelle appliquée et tracée
+T28	Chauffeur demande +50 % sur place	Refusé (422 REVISION_CAP_EXCEEDED), plafond 30 %
+T29	Contre-proposition client à 32 000 DA, acceptée par le chauffeur	booked à 32 000 DA, prix d’origine conservé dans l’audit
+T30	Axe non ouvert demandé par le client	422 AXIS_NOT_OPEN avec message explicite
+T31	Bascule FR/AR sur l’écran de comparaison des devis	RTL complet, dates et montants corrects
+T32	Note urbaine 5★, aucun trajet longue distance	La fiche inter-wilaya affiche « Nouveau sur ce type de trajet », pas 5★
+17. Planning, découpage en lots et livrables
+17.1 Découpage en lots (recommandé contractuellement)
+Lot	Contenu	Durée	Livrable
+L0	Cadrage, ateliers, validation des règles métier (tarifs, abonnement, KYC), architecture détaillée, maquettes UI/UX Figma (client, chauffeur, admin)	2-3 sem.	Maquettes validées + doc d’architecture
+L1	Backend socle : auth OTP, utilisateurs, profils, RBAC, médias, référentiels wilayas, OpenAPI	3 sem.	API documentée + staging
+L2	App Chauffeur : onboarding/KYC, abonnement (upload reçu + voucher), disponibilité, réception de demandes, offres, exécution, offline	4 sem.	APK bêta
+L3	App Client (parcours urbain) : tunnel de commande, estimation, offres, suivi GPS, chat/vocal, notation	4 sem.	APK bêta
+L3.5	Module inter-wilaya : matrice des axes, demande de devis, couverture chauffeur, retours à vide, engagement/acompte, écrans W1-W8 et mode longue distance	3 sem.	APK bêta v1.5
+L4	Admin web : dashboard, validation KYC, validation paiements, courses, litiges, paramètres, audit	3 sem.	Admin en production
+L5	Temps réel, notifications push, durcissement sécurité, tests de charge, corrections	2 sem.	Build release candidate
+L6	Bêta terrain (20 chauffeurs, 1 wilaya), corrections, formation, mise en production	2 sem.	v1 en production
+L7	Ouverture commerciale de l’inter-wilaya (axes depuis Oran), recalage terrain des prix, lancement	2 sem.	v1.5 en production
+Total (v1 + v1.5)		4,5 à 5 mois	
+Le CDC d’origine annonce 3 à 4 mois : c’est réaliste à condition de démarrer avec les maquettes validées, un périmètre gelé, et une seule wilaya. Prévoir +20 % de marge en cas de périmètre B2B ou de paiement en ligne.
+17.2 Jalons de paiement suggérés (à adapter au contrat)
+Jalon	Condition	%
+J1	Validation des maquettes et de l’architecture (fin L0)	15 %
+J2	Backend socle + app Chauffeur fonctionnelle (fin L2)	25 %
+J3	App Client fonctionnelle (fin L3)	20 %
+J4	Admin web + temps réel complets (fin L4/L5)	25 %
+J5	Recette finale, mise en production, documentation, transfert de code (fin L6)	15 %
+17.3 Livrables contractuels
+1.	Dépôt Git complet (historique, branches, CI) transféré au client, avec README reproductible.
+2.	docs/openapi.yaml + collection Postman/Newman.
+3.	docs/modele-donnees.md + scripts de migration versionnés.
+4.	APK Android signé (client + chauffeur) + App Bundle publié ; build iOS soumis à l’App Store.
+5.	Admin web déployé + guide-admin.pdf (avec captures).
+6.	runbook-exploitation.md et procédure de sauvegarde/restauration testée.
+7.	Jeu de données de démonstration + comptes de recette (staging).
+8.	Session de formation (2 h admin + 1 h passation technique) enregistrée.
+17.4 Répartition indicative de l’effort (pour chiffrage)
+Poste	Charge indicative
+Design UI/UX (3 apps, 2 langues)	25-35 j
+Backend (socle + métier + temps réel)	55-75 j
+App Chauffeur Flutter	35-45 j
+App Client Flutter (urbain)	35-45 j
+Module inter-wilaya (backend + 2 apps + admin)	25-35 j
+Admin React	25-35 j
+QA / tests / corrections	20-30 j
+DevOps / mise en production	8-12 j
+Total	≈ 205-275 j (soit ~10-13 homme-mois)
+Ce total correspond à une équipe de 2-3 développeurs + 1 designer sur 4 mois. Toute offre significativement inférieure doit être interrogée (périmètre réduit, qualité sacrifiée, ou sous-traitance offshore non supervisée).
+________________________________________
+18. Risques, points ouverts et décisions à trancher
+18.1 Registre des risques
+#	Risque	Impact	Probabilité	Mitigation
+R1	Faible adoption côté chauffeurs (abonnement refusé)	Critique	Moyenne	Essai 30 j, prix 1 000 DA bas, accompagnement terrain, voucher vendu par agents, démonstration du ROI
+R2	Contournement de la plateforme (courses hors app)	Élevé	Élevée	Valeur ajoutée (visibilité, historique, suivi), détection des désintermédiations, pas de commission donc peu d’incitation à contourner
+R3	Délivrabilité SMS insuffisante (OTP non reçu)	Élevé	Moyenne	Agrégateur local + secours, fallback vocal, tests par opérateur
+R4	Qualité d’adressage (pas de voie nommée)	Moyen	Élevée	Épinglage sur carte, photos, note vocale, appel obligatoire possible
+R5	Abus/fraude sur les justificatifs d’abonnement	Moyen	Moyenne	Validation manuelle + anti-doublon
+R6	Litiges sur le prix (différence estimation/réel)	Moyen	Élevée	Fourchette de prix, photos obligatoires, prix de l’offre acceptée contractuel, mention claire cash
+R7	Sécurité des personnes (agression, vol)	Critique	Faible	KYC, notation bidirectionnelle, bouton urgence, partage de suivi, bouton signaler
+R8	Coût de la cartographie en croissance	Moyen	Moyenne	Choix MapLibre, quotas, alertes budget
+R9	Indisponibilité d’un fournisseur (SMS, push)	Moyen	Faible	Second fournisseur, file de retry, dégradation gracieuse
+R10	Non-conformité données personnelles	Élevé	Faible	Cadrage juridique avec un avocat algérien avant lancement
+R11	Dépendance à un seul développeur	Élevé	Moyenne	Code documenté, CI, dépôt client, revue croisée
+R12	iOS indisponible / coûts App Store	Faible	Moyenne	Android d’abord, iOS en phase 2
+R13	Désistement sur un trajet inter-wilaya (client ou chauffeur), très coûteux à 400 km	Élevé	Moyenne	Acompte déclaré, engagement horodaté, pénalités réputationnelles, blocage de disponibilité, fenêtres d’annulation claires
+R14	Litige sur l’état des biens (« casse ») sans base contractuelle	Élevé	Moyenne	Photos obligatoires départ/arrivée, chat et notes vocales horodatés, avertissement assurance explicite, procédure de litige §11.5
+R15	Guerre des prix si les devis deviennent visibles entre chauffeurs	Moyen	Moyenne	Devis scellés (aucun chauffeur ne voit les prix des autres), plancher technique, pas d’enchère descendante
+18.2 Points ouverts (décisions du maître d’ouvrage requises)
+#	Question	Options	Recommandation
+Q1	L’essai de 30 jours démarre-t-il à l’inscription ou à la validation ?	(a) inscription (b) validation	(b) — sinon l’attente de revue consomme l’essai
+Q2	Prix fixe 1 000 DA ou variation par catégorie de véhicule ?	(a) unique (b) par catégorie	(a) en v1, évolutif ensuite
+Q3	L’attribution automatique d’offre est-elle activée ?	(a) non (b) oui avec 90 s	(a) en v1
+Q4	Les manutentionnaires (« bras ») sont-ils fournis par le chauffeur, ou recrutés par la plateforme ?	(a) chauffeur (b) plateforme	(a) — sinon la plateforme devient co-employeur
+Q5	La plateforme prend-elle une commission sur les « bras » ?	(a) non (b) oui	(a) pour rester cohérent avec « 0 commission »
+Q6	Les chauffeurs peuvent-ils refuser une course après acceptation sans pénalité ?	(a) pénalité réputationnelle (b) aucune	(a) — visible en admin
+Q7	Faut-il un numéro masqué pour les appels ?	(a) non v1 (b) oui	(a) v1, (b) v2
+Q8	Hébergement en Algérie ou à l’étranger ?	(a) VPS étranger (b) hébergeur algérien	À trancher avec un juriste (transfert de données)
+Q9	Politique d’annulation client (frais ?)	(a) gratuit avant chargement (b) frais symboliques	(a) — pas de flux financier en v1
+Q10	Que se passe-t-il si le volume réel dépasse ce que le client a déclaré ?	(a) prix renégocié sur place (b) prix ferme	(a) — avec validation du client dans l’app, plafond +30 % (§8.6)
+Q11	L’acompte inter-wilaya est-il obligatoire au lancement ?	(a) facultatif (b) obligatoire au-delà de 40 000 DA	(b) tranché : facultatif pour les trajets < 40 000 DA, obligatoire au-delà. Réévaluer après 30 trajets.
+Q12	Le groupage est-il autorisé ?	(a) non (b) oui avec signalement	(b) tranché : oui, signalé au client ; sans lui, les prix ne sont pas compétitifs face aux annonces
+Q13	Le client peut-il publier vers une wilaya non ouverte ?	(a) oui (b) non	(b) tranché : non, les axes sont ouverts au fur et à mesure (contrôle commercial de la qualité)
+Q14	Urbain et inter-wilaya partagent-ils la même note ?	(a) oui (b) deux notes	(b) tranché : deux notes distinctes (§7.5)
+Q15	Les prix de référence sont-ils affichés au client inter-wilaya ?	(a) non, seulement les devis (b) oui	(b) tranché : oui — c’est le principal facteur de confiance face à Ouedkniss
+________________________________________
+19. Annexes
+19.1 Énumérations de référence
+service_type        : moving | waste_removal | freight
+vehicle_category    : small_van | medium_truck | large_truck | tipper
+driver_status       : pending_documents | pending_review | approved | rejected | suspended | blocked
+ride_status         : draft | searching | assigned | driver_arriving | arrived_pickup | loading |
+                      in_transit | arrived_dropoff | completed | rated | cancelled_client |
+                      cancelled_driver | expired | disputed
+offer_status        : pending | accepted | rejected | withdrawn | expired
+subscription_status : active | grace | expired | cancelled
+subscription_kind   : trial | paid | manual
+payment_method      : baridimob | ccp | voucher | cash_agency
+payment_status      : pending | approved | rejected | refunded
+document_type       : license | vehicle_registration | insurance | vehicle_photo |
+                      vehicle_photo_plate | national_id
+dispute_category    : price | damage | no_show | rudeness | app_bug | other
+admin_role          : super_admin | admin | support
+-- Inter-wilaya
+intercity_status    : draft | collecting | quoted | booked | in_progress | completed |
+                      rated | cancelled_client | cancelled_driver | expired | disputed
+intercity_quote_status : pending | countered | accepted | rejected | withdrawn | expired
+date_flexibility    : fixed | plus_minus_1 | plus_minus_3 | flexible
+time_slot           : morning | afternoon | evening | any
+deposit_method      : ccp | baridimob | none
+19.2 Catalogue de codes d’erreur métier
+Code	HTTP	Signification
+VALIDATION_ERROR	400	Payload invalide (avec details[] par champ)
+OTP_INVALID	400	Code incorrect
+OTP_EXPIRED	410	Code expiré
+OTP_TOO_MANY_ATTEMPTS	429	Tentatives dépassées
+OTP_RATE_LIMITED	429	Renvoi trop rapide
+UNAUTHENTICATED	401	Jeton absent/expiré
+FORBIDDEN	403	Rôle insuffisant
+DRIVER_NOT_APPROVED	403	Compte non validé
+SUBSCRIPTION_EXPIRED	403	Abonnement expiré
+RIDE_ACTIVE_EXISTS	409	Course déjà en cours
+RIDE_NOT_SEARCHING	409	Course plus en recherche
+OFFER_ALREADY_TAKEN	409	Offre déjà acceptée
+OFFER_EXPIRED	409	Offre expirée
+PRICE_OUT_OF_RANGE	422	Prix hors bornes
+TOO_FAR_FROM_POINT	422	Position trop éloignée du point
+DOSSIER_INCOMPLET	422	Pièces manquantes (avec liste)
+PAYMENT_ALREADY_PENDING	409	Paiement déjà en attente
+VOUCHER_NOT_FOUND	404	Code inconnu
+VOUCHER_ALREADY_USED	409	Code déjà utilisé
+VOUCHER_EXPIRED	410	Code expiré
+MEDIA_TOO_LARGE	413	Fichier trop volumineux
+MEDIA_TYPE_NOT_ALLOWED	415	Type non autorisé
+RATE_LIMITED	429	Quota dépassé
+INTERNAL_ERROR	500	Erreur serveur (avec request_id)
+MIN_LEAD_TIME	422	Date inter-wilaya trop proche (J+1 minimum)
+MAX_LEAD_TIME	422	Date au-delà de l’horizon (J+60)
+AXIS_NOT_OPEN	422	Axe inter-wilaya non ouvert commercialement
+SAME_WILAYA	422	Départ = arrivée : utiliser le parcours urbain
+DATE_NOT_COMPATIBLE	422	Date proposée hors de la souplesse déclarée par le client
+COUNTER_ALREADY_USED	409	Contre-proposition déjà utilisée (1 seul tour)
+REVISION_CAP_EXCEEDED	422	Révision de prix au-delà de +30 %
+INTERCITY_ACTIVE_EXISTS	409	Demande inter-wilaya déjà en cours pour ce client
+DRIVER_BLOCKED_INTERCITY	409	Chauffeur indisponible : trajet inter-wilaya planifié sur cette période
+19.3 Paramètres d’application (app_settings) à prévoir
+Clé	Valeur par défaut	Description
+subscription_price_dzd	1000	Prix mensuel
+trial_days	30	Durée de l’essai
+grace_days	3	Jours de tolérance
+radius_km_default	15	Rayon de notification
+radius_ladder_km	[10,15,25]	Élargissement progressif
+max_drivers_notified	15	Plafond de diffusion
+search_ttl_minutes	15	Durée de recherche d’offres
+search_extend_enabled	true	Prolongation automatique 1×
+offer_ttl_minutes	15	Validité d’une offre
+offer_decision_seconds	45	Compte à rebours chauffeur
+cap_multiplier	2.5	Plafond d’offre
+floor_multiplier	0.85	Plancher d’offre
+max_photos_per_ride	6	Photos par demande
+max_photo_bytes	307200	300 Ko
+voice_note_max_seconds	60	Note vocale
+auto_assign_enabled	false	Attribution automatique
+auto_close_hours	12	Clôture auto des courses bloquées
+rating_window_hours	72	Fenêtre de notation/litige
+support_phone	—	Numéro de support
+support_whatsapp	—	WhatsApp support
+ccp_details	—	Coordonnées CCP pour l’abonnement
+terms_version	2026-11-01	Version des CGU
+intercity_enabled	false	Interrupteur global du module inter-wilaya
+intercity_open_wilayas	[]	Paires d’axes ouvertes commercialement
+intercity_quotes_ttl_hours	48	Durée de collecte des devis
+intercity_quote_extend_hours	24	Prolongation unique si < 3 devis
+intercity_notified_drivers_max	40	Plafond de diffusion par axe
+intercity_floor_multiplier	0.85	Plancher des devis
+intercity_cap_multiplier	1.80	Plafond des devis
+intercity_deposit_required_above_dzd	40000	Seuil d’acompte obligatoire (0 = jamais)
+intercity_driver_block_hours	24	Blocage du chauffeur autour de la date
+intercity_min_lead_days	1	Délai minimum avant la date
+intercity_max_lead_days	60	Horizon maximum
+intercity_revision_cap_pct	30	Écart maximal de révision sur place
+empty_return_discount_max_pct	25	Remise maximale retour à vide
+groupage_discount_max_pct	35	Remise maximale groupage
+19.4 Checklist de mise en production
+☐	Migrations appliquées et sauvegarde préalable effectuée
+☐	Variables d’environnement de production complètes et secrètes
+☐	Clés cartographie restreintes par plateforme, quotas et alertes activés
+☐	Compte SMS en production validé, Sender ID approuvé, test vers les 3 opérateurs
+☐	Certificats APNs / compte FCM en production configurés
+☐	Bucket privé + politique de cycle de vie + CORS restreint
+☐	HTTPS + HSTS + renouvellement automatique du certificat
+☐	Sauvegardes automatiques + restauration testée
+☐	Monitoring, alertes et page de statut actifs
+☐	Comptes admin créés, 2FA activée, mot de passe de démonstration supprimé
+☐	Données de test purgées en production
+☐	Textes légaux (CGU, confidentialité) publiés et versionnés
+☐	APK signé avec le keystore de production (sauvegardé hors ligne, 2 copies)
+☐	Fiche Play Store : captures, description FR/AR, politique de confidentialité, classification
+☐	Tutoriel chauffeur (PDF 1 page + in-app) prêt
+☐	Matrice route_matrix chargée et distances vérifiées sur les axes ouverts
+☐	Prix de référence inter-wilaya recalculés et validés sur les axes ouverts
+☐	Textes d’engagement longue distance (acompte, révision, assurance) publiés et versionnés
+☐	Support joignable, procédure d’incident affichée
+19.5 Tableau de correspondance CDC fonctionnel → présent document
+Exigence du CDC v1.0	Section(s) de ce document
+1.1 Objectif, 3 services	§1.1, §4.3 (service_type), §9.2
+1.2 Modèle économique, cash + abonnement	§1.5, §8.3, §8.4
+2. Trois modules	§2, §3.3
+3.1.A Inscription OTP	§5.2, §12.1
+3.1.B Prise de commande (5 sous-étapes)	§5.6, §9.2, §8.1
+3.1.C Système d’offres	§6, §5.7
+3.1.D Suivi, communication, historique, notation	§2.3, §5.9, §5.13, §9.2, §7
+3.2.A Onboarding KYC	§5.4, §10.1, §11.3
+3.2.B Abonnement, essai, reçu, voucher, expiration	§5.8, §8.3, §8.4, §10.5
+3.2.C Disponibilité, notifications, offres	§5.5, §6.1, §6.4, §10.2, §10.3
+3.2.D Exécution, GPS, cash	§7, §10.4
+3.3 Admin (dashboard, chauffeurs, paiements, litiges)	§5.12, §11
+4.1 Technologies	§3
+4.2 UX/UI, langues, vocal, data, poids	§13, §9.3, §10.6
+5. Livrables	§15, §17.3
+Ajout v2.0 — Parcours inter-wilaya (demande de devis)	§1.1, §4.3.2, §5.14, §6.5, §7.4-7.5, §8.5-8.7, §9.4, §10.8, §11.7
+Ajout v2.0 — Engagement, acompte et gestion du risque longue distance	§8.6
+Ajout v2.0 — Référentiel de prix marché algérien	§8.5, §20
+6. Planning	§17.1
+________________________________________
+20. Référentiel de prix observés en Algérie
+Synthèse normative de l’étude Etude-Marche-Prix-Inter-Wilaya.md (sources détaillées, relevés et cartographie concurrentielle). Les valeurs ci-dessous fondent les paramètres du §8.5. À recalibrer par enquête terrain auprès de 20 à 30 chauffeurs d’Oran avant figement définitif.
+20.1 Référentiel kilométrique
+Poste	Minimum	Moyenne	Maximum
+Déménagement dans la wilaya	4 000 DA / voyage	5 000 DA / voyage	6 000 DA / voyage
+Déménagement hors wilaya	50 DA/km	70 DA/km	100 DA/km
+Démontage / montage de meubles	1 000 DA	2 000 DA	3 000 DA
+Pratiques confirmées par des professionnels d’Oran : 60 DA/km hors wilaya, 4 000 DA en ville, 1 000 DA par manutentionnaire.
+20.2 Prestations réellement conclues (missions terminées et notées)
+Mission	Prix constaté
+Fourgon, quelques meubles, 10 km (Alger)	3 000 DA
+Transport d’objets Alger → Skikda (~450 km)	15 000 DA
+Transport d’un placard Tizi Ouzou → Alger (~110 km)	7 000 DA
+Déménagement Boussaâda → Alger (~250 km)	17 000 DA
+Déménagement Alger → Aïn Témouchent (~450 km)	26 000 DA
+Déménagement 15 km avec équipe, 13 h 30 de travail	31 000 DA
+Déménagement Reghaïa → Rahmania (25 km)	22 000 DA
+Fourgon + 3 manutentionnaires (Alger)	30 000 DA
+Lecture : sur les longs trajets, les prix conclus sont souvent inférieurs à la règle « 70 DA/km », signe de groupage et de retours à vide. C’est précisément pourquoi le module doit gérer ces deux mécanismes (§8.5) plutôt que de s’en tenir à un tarif linéaire.
+20.3 Plancher de référence (fret professionnel)
+Axe Alger–Oran (432 km), fret B2B sans manutention : fourgonnette 10 000 DA · 1 T 11 000 DA · 3,5 T 16 850 DA · 10 T 25 000 DA. Un déménagement complet avec chargement, déchargement et étages se situe donc structurellement au-dessus de 30 000 DA.
+20.4 Coût de revient chauffeur (base du prix plancher)
+Gasoil : 31,00 DA/L (prix officiel depuis le 1er janvier 2026). Oran → Alger, camion 3,5 t :
+Poste	Calcul	Montant
+Carburant aller (20 L/100)	86 L × 31	2 680 DA
+Carburant retour à vide (16 L/100)	69 L × 31	2 140 DA
+Entretien / usure (~2,5 DA/km)	864 km	2 160 DA
+2 manutentionnaires	2 × 2 500	5 000 DA
+2 jours d’immobilisation	2 × 5 000	10 000 DA
+Coût de revient		≈ 22 000 DA
+20.5 Leçon concurrentielle à retenir
+Concurrent	Modèle	Conséquence
+Triq	Commission 10 % sur le déménagement (5 % VTC, 15 % remorquage)	Sur un trajet à 45 000 DA, coûte 4 500 DA au chauffeur = 4,5 mois d’abonnement
+TruckyDZ	Fret interwilaya, offres, négociation	Concurrent le plus complet sur le fret
+Bricoram	Demande → devis multi-métiers	Modèle proche, mais transport noyé parmi 100 services
+inDrive	Négociation pair-à-pair ; inter-wilaya lancé, fret non lancé en Algérie	Fenêtre de marché sur le fret/marchandise
+iTAXI / TAXI DZ	0 % commission + 2 500 DA/mois	Le modèle « abonnement sans commission » est déjà validé en Algérie ; l’offre à 1 000 DA est 2,5× moins chère
+Argumentaire chauffeur à retenir : un chauffeur qui réalise 4 trajets Oran→Alger par mois paie 1 000 DA chez nous, contre 18 000 DA de commission chez un concurrent à 10 %. Il rembourse son abonnement dès la première course.
+________________________________________
+FIN DU DOCUMENT — VERSION FINALE v2.0 Document contractuel de référence. Les valeurs tarifaires et les paramètres par défaut constituent des hypothèses à valider par le maître d’ouvrage et par une enquête terrain avant la mise en production.

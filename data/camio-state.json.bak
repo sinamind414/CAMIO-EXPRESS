@@ -1,0 +1,1640 @@
+{
+  "wilayas": [
+    {
+      "code": 31,
+      "nameFr": "Oran",
+      "nameAr": "وهران",
+      "isActive": true,
+      "lat": 35.6971,
+      "lng": -0.6308,
+      "communes": [
+        {
+          "id": "3101",
+          "nameFr": "Oran Centre (Larbi Ben M’hidi)",
+          "nameAr": "وهران الوسطى",
+          "lat": 35.6971,
+          "lng": -0.6308
+        },
+        {
+          "id": "3102",
+          "nameFr": "Es Senia",
+          "nameAr": "السانية",
+          "lat": 35.6479,
+          "lng": -0.6217
+        },
+        {
+          "id": "3103",
+          "nameFr": "Bir El Djir",
+          "nameAr": "بئر الجير",
+          "lat": 35.7204,
+          "lng": -0.5453
+        },
+        {
+          "id": "3104",
+          "nameFr": "Ain El Turk",
+          "nameAr": "عين الترك",
+          "lat": 35.7418,
+          "lng": -0.7689
+        }
+      ]
+    },
+    {
+      "code": 16,
+      "nameFr": "Alger",
+      "nameAr": "الجزائر",
+      "isActive": true,
+      "lat": 36.7538,
+      "lng": 3.0588,
+      "communes": [
+        {
+          "id": "1601",
+          "nameFr": "Bab Ezzouar",
+          "nameAr": "باب الزوار",
+          "lat": 36.72,
+          "lng": 3.183
+        },
+        {
+          "id": "1602",
+          "nameFr": "Hydra",
+          "nameAr": "حيدرة",
+          "lat": 36.7431,
+          "lng": 3.0337
+        },
+        {
+          "id": "1603",
+          "nameFr": "Reghaïa",
+          "nameAr": "رغاية",
+          "lat": 36.7359,
+          "lng": 3.3401
+        }
+      ]
+    },
+    {
+      "code": 22,
+      "nameFr": "Sidi Bel Abbès",
+      "nameAr": "سيدي بلعباس",
+      "isActive": true,
+      "lat": 35.1899,
+      "lng": -0.6309,
+      "communes": [
+        {
+          "id": "2201",
+          "nameFr": "Sidi Bel Abbès Centre",
+          "nameAr": "سيدي بلعباس",
+          "lat": 35.1899,
+          "lng": -0.6309
+        }
+      ]
+    },
+    {
+      "code": 27,
+      "nameFr": "Mostaganem",
+      "nameAr": "مستغانم",
+      "isActive": true,
+      "lat": 35.9312,
+      "lng": 0.0892,
+      "communes": [
+        {
+          "id": "2701",
+          "nameFr": "Mostaganem Centre",
+          "nameAr": "مستغانم",
+          "lat": 35.9312,
+          "lng": 0.0892
+        }
+      ]
+    },
+    {
+      "code": 13,
+      "nameFr": "Tlemcen",
+      "nameAr": "تلمسان",
+      "isActive": true,
+      "lat": 34.8783,
+      "lng": -1.315,
+      "communes": [
+        {
+          "id": "1301",
+          "nameFr": "Tlemcen Centre",
+          "nameAr": "تلمسان",
+          "lat": 34.8783,
+          "lng": -1.315
+        }
+      ]
+    },
+    {
+      "code": 48,
+      "nameFr": "Relizane",
+      "nameAr": "غليزان",
+      "isActive": true,
+      "lat": 35.7373,
+      "lng": 0.556,
+      "communes": [
+        {
+          "id": "4801",
+          "nameFr": "Relizane Centre",
+          "nameAr": "غليزان",
+          "lat": 35.7373,
+          "lng": 0.556
+        }
+      ]
+    },
+    {
+      "code": 19,
+      "nameFr": "Sétif",
+      "nameAr": "سطيف",
+      "isActive": true,
+      "lat": 36.1911,
+      "lng": 5.4137,
+      "communes": [
+        {
+          "id": "1901",
+          "nameFr": "Sétif Centre",
+          "nameAr": "سطيف",
+          "lat": 36.1911,
+          "lng": 5.4137
+        }
+      ]
+    },
+    {
+      "code": 25,
+      "nameFr": "Constantine",
+      "nameAr": "قسنطينة",
+      "isActive": true,
+      "lat": 36.365,
+      "lng": 6.6147,
+      "communes": [
+        {
+          "id": "2501",
+          "nameFr": "Constantine Centre",
+          "nameAr": "قسنطينة",
+          "lat": 36.365,
+          "lng": 6.6147
+        }
+      ]
+    },
+    {
+      "code": 8,
+      "nameFr": "Béchar",
+      "nameAr": "بشار",
+      "isActive": true,
+      "lat": 31.6167,
+      "lng": -2.2167,
+      "communes": [
+        {
+          "id": "0801",
+          "nameFr": "Béchar Centre",
+          "nameAr": "بشار",
+          "lat": 31.6167,
+          "lng": -2.2167
+        }
+      ]
+    },
+    {
+      "code": 11,
+      "nameFr": "Tamanrasset",
+      "nameAr": "تمنراست",
+      "isActive": false,
+      "lat": 22.785,
+      "lng": 5.5228,
+      "communes": [
+        {
+          "id": "1101",
+          "nameFr": "Tamanrasset",
+          "nameAr": "تمنراست",
+          "lat": 22.785,
+          "lng": 5.5228
+        }
+      ]
+    }
+  ],
+  "routeMatrix": [
+    {
+      "id": "rt-31-16",
+      "fromWilaya": 31,
+      "toWilaya": 16,
+      "distanceKm": 432,
+      "durationMin": 315,
+      "isActive": true,
+      "axisCoefficient": 1,
+      "refPrices": {
+        "small_van": 23500,
+        "utility_van": 26500,
+        "medium_truck": 30000,
+        "large_truck": 41500,
+        "tipper": 38500
+      }
+    },
+    {
+      "id": "rt-16-31",
+      "fromWilaya": 16,
+      "toWilaya": 31,
+      "distanceKm": 432,
+      "durationMin": 315,
+      "isActive": true,
+      "axisCoefficient": 1,
+      "refPrices": {
+        "small_van": 23500,
+        "utility_van": 26500,
+        "medium_truck": 30000,
+        "large_truck": 41500,
+        "tipper": 38500
+      }
+    },
+    {
+      "id": "rt-31-22",
+      "fromWilaya": 31,
+      "toWilaya": 22,
+      "distanceKm": 90,
+      "durationMin": 75,
+      "isActive": true,
+      "axisCoefficient": 1,
+      "refPrices": {
+        "small_van": 8000,
+        "utility_van": 9500,
+        "medium_truck": 11000,
+        "large_truck": 16000,
+        "tipper": 14500
+      }
+    },
+    {
+      "id": "rt-31-27",
+      "fromWilaya": 31,
+      "toWilaya": 27,
+      "distanceKm": 80,
+      "durationMin": 68,
+      "isActive": true,
+      "axisCoefficient": 1,
+      "refPrices": {
+        "small_van": 7500,
+        "utility_van": 9000,
+        "medium_truck": 10500,
+        "large_truck": 15000,
+        "tipper": 13500
+      }
+    },
+    {
+      "id": "rt-31-13",
+      "fromWilaya": 31,
+      "toWilaya": 13,
+      "distanceKm": 140,
+      "durationMin": 115,
+      "isActive": true,
+      "axisCoefficient": 1,
+      "refPrices": {
+        "small_van": 10500,
+        "utility_van": 12000,
+        "medium_truck": 14000,
+        "large_truck": 19500,
+        "tipper": 18000
+      }
+    },
+    {
+      "id": "rt-31-48",
+      "fromWilaya": 31,
+      "toWilaya": 48,
+      "distanceKm": 130,
+      "durationMin": 105,
+      "isActive": true,
+      "axisCoefficient": 1,
+      "refPrices": {
+        "small_van": 10000,
+        "utility_van": 11500,
+        "medium_truck": 13000,
+        "large_truck": 18000,
+        "tipper": 17000
+      }
+    },
+    {
+      "id": "rt-31-08",
+      "fromWilaya": 31,
+      "toWilaya": 8,
+      "distanceKm": 580,
+      "durationMin": 460,
+      "isActive": true,
+      "axisCoefficient": 1.15,
+      "refPrices": {
+        "small_van": 30000,
+        "utility_van": 34000,
+        "medium_truck": 38000,
+        "large_truck": 52000,
+        "tipper": 48500
+      }
+    },
+    {
+      "id": "rt-31-19",
+      "fromWilaya": 31,
+      "toWilaya": 19,
+      "distanceKm": 660,
+      "durationMin": 490,
+      "isActive": true,
+      "axisCoefficient": 1,
+      "refPrices": {
+        "small_van": 33500,
+        "utility_van": 38000,
+        "medium_truck": 42500,
+        "large_truck": 58000,
+        "tipper": 54000
+      }
+    },
+    {
+      "id": "rt-31-25",
+      "fromWilaya": 31,
+      "toWilaya": 25,
+      "distanceKm": 760,
+      "durationMin": 560,
+      "isActive": true,
+      "axisCoefficient": 1,
+      "refPrices": {
+        "small_van": 38000,
+        "utility_van": 43000,
+        "medium_truck": 48000,
+        "large_truck": 66000,
+        "tipper": 61000
+      }
+    }
+  ],
+  "pricingRules": [
+    {
+      "vehicleCategory": "small_van",
+      "baseFareDzd": 2500,
+      "perKmDzd": 500,
+      "perFloorDzd": 500,
+      "porterUnitDzd": 2400,
+      "minPriceDzd": 4000,
+      "intercityBaseDzd": 4000,
+      "intercityPerKmDzd": 45
+    },
+    {
+      "vehicleCategory": "utility_van",
+      "baseFareDzd": 3200,
+      "perKmDzd": 600,
+      "perFloorDzd": 500,
+      "porterUnitDzd": 2400,
+      "minPriceDzd": 4000,
+      "intercityBaseDzd": 5000,
+      "intercityPerKmDzd": 50
+    },
+    {
+      "vehicleCategory": "medium_truck",
+      "baseFareDzd": 4000,
+      "perKmDzd": 700,
+      "perFloorDzd": 500,
+      "porterUnitDzd": 2400,
+      "minPriceDzd": 4000,
+      "intercityBaseDzd": 6000,
+      "intercityPerKmDzd": 55
+    },
+    {
+      "vehicleCategory": "large_truck",
+      "baseFareDzd": 6000,
+      "perKmDzd": 900,
+      "perFloorDzd": 500,
+      "porterUnitDzd": 2400,
+      "minPriceDzd": 6000,
+      "intercityBaseDzd": 9000,
+      "intercityPerKmDzd": 75
+    },
+    {
+      "vehicleCategory": "tipper",
+      "baseFareDzd": 6500,
+      "perKmDzd": 900,
+      "perFloorDzd": 500,
+      "porterUnitDzd": 2400,
+      "minPriceDzd": 6500,
+      "intercityBaseDzd": 8000,
+      "intercityPerKmDzd": 70
+    }
+  ],
+  "settings": {
+    "subscriptionPriceDzd": 1000,
+    "trialDays": 30,
+    "graceDays": 3,
+    "radiusKmDefault": 15,
+    "searchTtlMinutes": 15,
+    "capMultiplier": 2.5,
+    "floorMultiplier": 0.85,
+    "intercityFloorMultiplier": 0.85,
+    "intercityCapMultiplier": 1.8,
+    "intercityDepositRequiredAboveDzd": 40000,
+    "intercityRevisionCapPct": 30,
+    "emptyReturnDiscountMaxPct": 25,
+    "groupageDiscountMaxPct": 35,
+    "directRequestEnabled": false,
+    "contactRevealAfter": "assigned",
+    "chatEnabledBeforeAssignment": false,
+    "driverResponseRateMin": 0.3,
+    "driverIgnoredRequestsMax": 20,
+    "intercityDriverBlockHours": 24,
+    "ccpAccount": "0023456789 clé 45",
+    "ccpHolder": "SARL CAMIO EXPRESS LOGISTICS",
+    "supportPhone": "+213 550 00 11 22"
+  },
+  "drivers": [
+    {
+      "id": "drv-karim",
+      "phone": "+213661234567",
+      "fullName": "Karim Benali",
+      "wilayaCode": 31,
+      "status": "approved",
+      "bio": "Spécialiste déménagement Oran & axe Ouest–Centre depuis 8 ans.",
+      "isOnline": true,
+      "lat": 35.6982,
+      "lng": -0.6295,
+      "ratingAvg": 4.85,
+      "ratingsCount": 64,
+      "ratingIntercityAvg": 4.9,
+      "intercityRatingsCount": 14,
+      "intercityCompleted": 14,
+      "intercityPenaltyCount": 0,
+      "ridesCompleted": 113,
+      "ridesCancelled": 1,
+      "acceptanceRate": 0.94,
+      "requestsReceivedCount": 49,
+      "requestsRespondedCount": 46,
+      "ignoredRequestsStreak": 0,
+      "responseRate": 0.94,
+      "isDemotedInBroadcast": false,
+      "vehicle": {
+        "id": "veh-1",
+        "driverId": "drv-karim",
+        "category": "medium_truck",
+        "brand": "Hyundai",
+        "model": "HD65 (3,5 t)",
+        "plateNumber": "04521-118-31",
+        "year": 2019,
+        "maxLoadKg": 3500,
+        "volumeM3": 12,
+        "hasTailgate": true,
+        "hasRamps": true,
+        "isActive": true
+      },
+      "documents": [
+        {
+          "id": "doc-1",
+          "driverId": "drv-karim",
+          "docType": "license",
+          "fileName": "permis_c_karim.jpg",
+          "previewUrl": "",
+          "status": "approved",
+          "expiresOn": "2028-06-15"
+        },
+        {
+          "id": "doc-2",
+          "driverId": "drv-karim",
+          "docType": "vehicle_registration",
+          "fileName": "carte_grise_hd65.jpg",
+          "previewUrl": "",
+          "status": "approved"
+        },
+        {
+          "id": "doc-3",
+          "driverId": "drv-karim",
+          "docType": "insurance",
+          "fileName": "assurance_caat_2027.jpg",
+          "previewUrl": "",
+          "status": "approved",
+          "expiresOn": "2027-04-30"
+        },
+        {
+          "id": "doc-4",
+          "driverId": "drv-karim",
+          "docType": "vehicle_photo_plate",
+          "fileName": "camion_plaque_31.jpg",
+          "previewUrl": "",
+          "status": "approved"
+        }
+      ],
+      "subscription": {
+        "id": "sub-karim",
+        "driverId": "drv-karim",
+        "kind": "paid",
+        "status": "active",
+        "startsOn": "2026-11-01",
+        "endsOn": "2026-12-01",
+        "graceUntil": "2026-12-04",
+        "amountDzd": 1000
+      },
+      "coverageAxes": [
+        {
+          "fromWilaya": 31,
+          "toWilaya": 16
+        },
+        {
+          "fromWilaya": 31,
+          "toWilaya": 13
+        },
+        {
+          "fromWilaya": 31,
+          "toWilaya": 22
+        },
+        {
+          "fromWilaya": 31,
+          "toWilaya": 27
+        }
+      ],
+      "autoBidConfig": {
+        "enabled": false,
+        "ratePerKmDzd": 1400,
+        "minFloorPriceDzd": 12000,
+        "maxDistanceKm": 35,
+        "serviceTypes": [
+          "moving",
+          "freight",
+          "refrigerated"
+        ],
+        "acceptSmallerLoads": true,
+        "message": "Offre auto Karim · Équipe & sangles incluses"
+      }
+    },
+    {
+      "id": "drv-mourad",
+      "phone": "+213770458912",
+      "fullName": "Mourad Mansouri",
+      "wilayaCode": 31,
+      "status": "approved",
+      "bio": "Camion benne 5 t · gravats et déblais chantiers Oran.",
+      "isOnline": true,
+      "lat": 35.6912,
+      "lng": -0.618,
+      "ratingAvg": 4.72,
+      "ratingsCount": 39,
+      "ratingIntercityAvg": 0,
+      "intercityRatingsCount": 0,
+      "intercityCompleted": 0,
+      "intercityPenaltyCount": 0,
+      "ridesCompleted": 71,
+      "ridesCancelled": 2,
+      "acceptanceRate": 0.89,
+      "requestsReceivedCount": 35,
+      "requestsRespondedCount": 31,
+      "ignoredRequestsStreak": 1,
+      "responseRate": 0.89,
+      "isDemotedInBroadcast": false,
+      "vehicle": {
+        "id": "veh-2",
+        "driverId": "drv-mourad",
+        "category": "tipper",
+        "brand": "JAC",
+        "model": "N56 Benne",
+        "plateNumber": "01892-121-31",
+        "year": 2021,
+        "maxLoadKg": 5000,
+        "volumeM3": 6,
+        "hasTailgate": false,
+        "hasRamps": false,
+        "isActive": true
+      },
+      "documents": [
+        {
+          "id": "doc-5",
+          "driverId": "drv-mourad",
+          "docType": "license",
+          "fileName": "permis_mourad.jpg",
+          "previewUrl": "",
+          "status": "approved",
+          "expiresOn": "2029-01-10"
+        },
+        {
+          "id": "doc-6",
+          "driverId": "drv-mourad",
+          "docType": "vehicle_registration",
+          "fileName": "cg_jac.jpg",
+          "previewUrl": "",
+          "status": "approved"
+        },
+        {
+          "id": "doc-7",
+          "driverId": "drv-mourad",
+          "docType": "insurance",
+          "fileName": "assur_saa.jpg",
+          "previewUrl": "",
+          "status": "approved",
+          "expiresOn": "2027-02-15"
+        },
+        {
+          "id": "doc-8",
+          "driverId": "drv-mourad",
+          "docType": "vehicle_photo_plate",
+          "fileName": "benne_31.jpg",
+          "previewUrl": "",
+          "status": "approved"
+        }
+      ],
+      "subscription": {
+        "id": "sub-mourad",
+        "driverId": "drv-mourad",
+        "kind": "trial",
+        "status": "grace",
+        "startsOn": "2026-10-18",
+        "endsOn": "2026-11-17",
+        "graceUntil": "2026-11-20",
+        "amountDzd": 0
+      },
+      "coverageAxes": [
+        {
+          "fromWilaya": 31,
+          "toWilaya": 27
+        }
+      ],
+      "autoBidConfig": {
+        "enabled": false,
+        "ratePerKmDzd": 1200,
+        "minFloorPriceDzd": 9500,
+        "maxDistanceKm": 25,
+        "serviceTypes": [
+          "waste_removal",
+          "towing"
+        ],
+        "acceptSmallerLoads": false,
+        "message": "Offre auto Mourad · Intervention rapide Oran"
+      }
+    },
+    {
+      "id": "drv-yassine",
+      "phone": "+213552981144",
+      "fullName": "Yassine Khelifi",
+      "wilayaCode": 31,
+      "status": "pending_review",
+      "bio": "Grand camion Sonacome 8 t pour déménagements et fret inter-wilaya.",
+      "isOnline": false,
+      "lat": 35.661,
+      "lng": -0.625,
+      "ratingAvg": 0,
+      "ratingsCount": 0,
+      "ratingIntercityAvg": 0,
+      "intercityRatingsCount": 0,
+      "intercityCompleted": 0,
+      "intercityPenaltyCount": 0,
+      "ridesCompleted": 0,
+      "ridesCancelled": 0,
+      "acceptanceRate": 1,
+      "requestsReceivedCount": 0,
+      "requestsRespondedCount": 0,
+      "ignoredRequestsStreak": 0,
+      "responseRate": 1,
+      "isDemotedInBroadcast": false,
+      "vehicle": {
+        "id": "veh-3",
+        "driverId": "drv-yassine",
+        "category": "large_truck",
+        "brand": "SNVI",
+        "model": "K66 (8 t)",
+        "plateNumber": "09310-116-31",
+        "year": 2017,
+        "maxLoadKg": 8000,
+        "volumeM3": 25,
+        "hasTailgate": true,
+        "hasRamps": true,
+        "isActive": true
+      },
+      "documents": [
+        {
+          "id": "doc-9",
+          "driverId": "drv-yassine",
+          "docType": "license",
+          "fileName": "permis_yassine.jpg",
+          "previewUrl": "",
+          "status": "approved",
+          "expiresOn": "2028-09-20"
+        },
+        {
+          "id": "doc-10",
+          "driverId": "drv-yassine",
+          "docType": "vehicle_registration",
+          "fileName": "cg_snvi.jpg",
+          "previewUrl": "",
+          "status": "uploaded"
+        },
+        {
+          "id": "doc-11",
+          "driverId": "drv-yassine",
+          "docType": "insurance",
+          "fileName": "assurance_2027.jpg",
+          "previewUrl": "",
+          "status": "uploaded",
+          "expiresOn": "2027-01-12"
+        },
+        {
+          "id": "doc-12",
+          "driverId": "drv-yassine",
+          "docType": "vehicle_photo_plate",
+          "fileName": "snvi_plaque.jpg",
+          "previewUrl": "",
+          "status": "uploaded"
+        }
+      ],
+      "subscription": {
+        "id": "sub-yassine",
+        "driverId": "drv-yassine",
+        "kind": "trial",
+        "status": "active",
+        "startsOn": "2026-11-18",
+        "endsOn": "2026-12-18",
+        "graceUntil": "2026-12-21",
+        "amountDzd": 0
+      },
+      "coverageAxes": [
+        {
+          "fromWilaya": 31,
+          "toWilaya": null
+        }
+      ],
+      "autoBidConfig": {
+        "enabled": false,
+        "ratePerKmDzd": 1400,
+        "minFloorPriceDzd": 12000,
+        "maxDistanceKm": 35,
+        "serviceTypes": [
+          "moving",
+          "freight"
+        ],
+        "acceptSmallerLoads": true,
+        "message": "Offre automatique · Disponible immédiatement"
+      }
+    }
+  ],
+  "rides": [
+    {
+      "id": "ride-1795113984591",
+      "rideCode": "LM-2026-004513",
+      "clientId": "client-amine",
+      "clientName": "Amine Boudiaf",
+      "clientPhone": "+213551889900",
+      "vehicleCategory": "van",
+      "serviceType": "moving",
+      "status": "completed",
+      "wilayaCode": 31,
+      "pickup": {
+        "address": "Oran Centre",
+        "lat": 35.6971,
+        "lng": -0.6308,
+        "contact": {
+          "name": "Karim",
+          "phone": "+213550000001"
+        },
+        "note": "Appeler"
+      },
+      "dropoff": {
+        "address": "Es Senia",
+        "lat": 35.6479,
+        "lng": -0.6217,
+        "contact": {
+          "name": "Nadia",
+          "phone": "+213550000002"
+        },
+        "note": "2e etage"
+      },
+      "distanceKm": 7.5,
+      "floorFrom": 1,
+      "floorTo": 2,
+      "hasElevatorFrom": false,
+      "hasElevatorTo": false,
+      "portersCount": 1,
+      "hasFragileItems": false,
+      "needsDisassembly": false,
+      "volumeNote": "",
+      "clientComment": "",
+      "photos": [
+        "test.jpg"
+      ],
+      "hasVoiceNote": false,
+      "estimatedPriceDzd": 12000,
+      "priceFloorDzd": 10000,
+      "priceCapDzd": 30000,
+      "notifiedDriversCount": 2,
+      "searchExpiresAt": "2026-11-19T19:01:24.591Z",
+      "createdAt": "2026-11-19T18:46:24.591Z",
+      "offers": [
+        {
+          "id": "off-1795113997338-21ve",
+          "rideId": "ride-1795113984591",
+          "driverId": "drv-karim",
+          "driverName": "Karim Benali",
+          "driverRating": 4.85,
+          "driverRidesCompleted": 112,
+          "vehicleCategory": "medium_truck",
+          "vehicleLabel": "Hyundai HD65 (3,5 t)",
+          "plateMasked": "04521-***-31",
+          "priceDzd": 16000,
+          "etaMinutes": 12,
+          "portersOffered": 1,
+          "message": "",
+          "status": "accepted",
+          "isAutoBid": false,
+          "retractableUntil": "2026-11-19T18:49:37.338Z",
+          "createdAt": "2026-11-19T18:46:37.338Z"
+        }
+      ],
+      "events": [
+        {
+          "id": "ev-1795113984591",
+          "fromStatus": null,
+          "toStatus": "searching",
+          "actor": "client",
+          "note": "Demande publiée (2 chauffeurs notifiés)",
+          "createdAt": "2026-11-19T18:46:24.591Z"
+        },
+        {
+          "id": "ev-1795113997364",
+          "fromStatus": "searching",
+          "toStatus": "assigned",
+          "actor": "client",
+          "note": "Offre acceptée : Karim Benali (16000 DA)",
+          "createdAt": "2026-11-19T18:46:37.364Z"
+        },
+        {
+          "id": "ev-1795114010430",
+          "fromStatus": "assigned",
+          "toStatus": "driver_arriving",
+          "actor": "driver",
+          "createdAt": "2026-11-19T18:46:50.430Z"
+        },
+        {
+          "id": "ev-1795114010447",
+          "fromStatus": "driver_arriving",
+          "toStatus": "arrived_pickup",
+          "actor": "driver",
+          "createdAt": "2026-11-19T18:46:50.447Z"
+        },
+        {
+          "id": "ev-1795114010467",
+          "fromStatus": "arrived_pickup",
+          "toStatus": "loading",
+          "actor": "driver",
+          "createdAt": "2026-11-19T18:46:50.467Z"
+        },
+        {
+          "id": "ev-1795114010481",
+          "fromStatus": "loading",
+          "toStatus": "in_transit",
+          "actor": "driver",
+          "createdAt": "2026-11-19T18:46:50.481Z"
+        },
+        {
+          "id": "ev-1795114010515",
+          "fromStatus": "in_transit",
+          "toStatus": "completed",
+          "actor": "driver",
+          "createdAt": "2026-11-19T18:46:50.515Z"
+        }
+      ],
+      "driverId": "drv-karim",
+      "driverName": "Karim Benali",
+      "driverPhone": "+213661234567",
+      "finalAgreedPriceDzd": 16000,
+      "driverLivePos": {
+        "lat": 35.6982,
+        "lng": -0.6295,
+        "heading": 220,
+        "speedKmh": 34,
+        "ts": "2026-11-19T18:46:37.364Z"
+      },
+      "driverTrail": [
+        {
+          "lat": 35.6982,
+          "lng": -0.6295,
+          "ts": "2026-11-19T18:46:37.364Z"
+        }
+      ],
+      "loadingStartedAt": "2026-11-19T18:46:50.467Z",
+      "completedAt": "2026-11-19T18:46:50.515Z",
+      "proofOfDelivery": {
+        "photoDataUrl": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAEf/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABBQI//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPwF//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPwF//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQAGPwJ//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPyF//9oADAMBAAIAAwAAABD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAEDAQE/EB//xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAECAQE/EB//xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAE/EB//2Q==",
+        "capturedAt": "2026-11-19T18:46:50.515Z",
+        "note": "Livr�"
+      }
+    },
+    {
+      "id": "ride-demo-1",
+      "rideCode": "LM-2026-004512",
+      "clientId": "client-amine",
+      "clientName": "Amine Boudiaf",
+      "clientPhone": "+213551889900",
+      "vehicleCategory": "medium_truck",
+      "serviceType": "moving",
+      "status": "searching",
+      "wilayaCode": 31,
+      "pickup": {
+        "address": "Rue Larbi Ben M’hidi, Oran Centre",
+        "lat": 35.6971,
+        "lng": -0.6308
+      },
+      "dropoff": {
+        "address": "Cité Université, Es Senia, Oran",
+        "lat": 35.6479,
+        "lng": -0.6217
+      },
+      "distanceKm": 8.4,
+      "floorFrom": 3,
+      "floorTo": 0,
+      "hasElevatorFrom": false,
+      "hasElevatorTo": true,
+      "portersCount": 2,
+      "hasFragileItems": true,
+      "needsDisassembly": true,
+      "volumeNote": "Salon + 1 chambre + réfrigérateur",
+      "clientComment": "Stationnement facile devant l’immeuble avant 16h.",
+      "clientBudgetDzd": 16000,
+      "photos": [
+        "photo_salon_oran.jpg"
+      ],
+      "estimatedPriceDzd": 16500,
+      "priceFloorDzd": 14000,
+      "priceCapDzd": 41500,
+      "notifiedDriversCount": 6,
+      "searchExpiresAt": "2026-11-19T15:12:16.313Z",
+      "createdAt": "2026-11-19T14:57:16.314Z",
+      "offers": [
+        {
+          "id": "offer-seed-1",
+          "rideId": "ride-demo-1",
+          "driverId": "drv-mourad",
+          "driverName": "Mourad Mansouri",
+          "driverRating": 4.72,
+          "driverRidesCompleted": 71,
+          "vehicleCategory": "medium_truck",
+          "vehicleLabel": "Hyundai HD65 (3,5 t)",
+          "plateMasked": "01892-***-31",
+          "priceDzd": 16000,
+          "etaMinutes": 14,
+          "portersOffered": 2,
+          "message": "Disponible tout de suite avec 2 porteurs expérimentés.",
+          "status": "pending",
+          "createdAt": "2026-11-19T14:57:46.314Z"
+        }
+      ],
+      "events": [
+        {
+          "id": "ev-1",
+          "fromStatus": null,
+          "toStatus": "searching",
+          "actor": "client",
+          "note": "Demande publiée (6 chauffeurs notifiés)",
+          "createdAt": "2026-11-19T14:57:16.314Z"
+        }
+      ]
+    },
+    {
+      "id": "ride-demo-completed",
+      "rideCode": "LM-2026-004495",
+      "clientId": "client-amine",
+      "clientName": "Amine Boudiaf",
+      "clientPhone": "+213551889900",
+      "driverId": "drv-karim",
+      "driverName": "Karim Benali",
+      "driverPhone": "+213661234567",
+      "vehicleCategory": "medium_truck",
+      "serviceType": "moving",
+      "status": "completed",
+      "wilayaCode": 31,
+      "pickup": {
+        "address": "Gambetta, Oran",
+        "lat": 35.7024,
+        "lng": -0.6184
+      },
+      "dropoff": {
+        "address": "Akid Lotfi, Bir El Djir, Oran",
+        "lat": 35.7186,
+        "lng": -0.5831
+      },
+      "distanceKm": 6.2,
+      "floorFrom": 2,
+      "floorTo": 1,
+      "hasElevatorFrom": false,
+      "hasElevatorTo": true,
+      "portersCount": 2,
+      "hasFragileItems": true,
+      "needsDisassembly": false,
+      "volumeNote": "Chambre à coucher + électroménager",
+      "clientComment": "Règlement cash effectué à la livraison.",
+      "photos": [
+        "chambre_gambetta.jpg"
+      ],
+      "estimatedPriceDzd": 14500,
+      "priceFloorDzd": 12500,
+      "priceCapDzd": 36500,
+      "finalAgreedPriceDzd": 14000,
+      "notifiedDriversCount": 5,
+      "searchExpiresAt": "2026-11-19T11:58:16.314Z",
+      "createdAt": "2026-11-19T10:58:16.314Z",
+      "completedAt": "2026-11-19T14:28:16.314Z",
+      "offers": [
+        {
+          "id": "offer-seed-completed-1",
+          "rideId": "ride-demo-completed",
+          "driverId": "drv-karim",
+          "driverName": "Karim Benali",
+          "driverRating": 4.85,
+          "driverRidesCompleted": 112,
+          "vehicleCategory": "medium_truck",
+          "vehicleLabel": "Isuzu NQR (3,5 t)",
+          "plateMasked": "04120-***-31",
+          "priceDzd": 14000,
+          "etaMinutes": 10,
+          "portersOffered": 2,
+          "message": "Équipe complète et couvertures de protection.",
+          "status": "accepted",
+          "createdAt": "2026-11-19T11:04:16.314Z"
+        }
+      ],
+      "events": [
+        {
+          "id": "ev-comp-1",
+          "fromStatus": null,
+          "toStatus": "searching",
+          "actor": "client",
+          "note": "Demande publiée",
+          "createdAt": "2026-11-19T10:58:16.314Z"
+        },
+        {
+          "id": "ev-comp-2",
+          "fromStatus": "searching",
+          "toStatus": "assigned",
+          "actor": "client",
+          "note": "Offre acceptée : Karim Benali (14 000 DA)",
+          "createdAt": "2026-11-19T11:10:16.314Z"
+        },
+        {
+          "id": "ev-comp-3",
+          "fromStatus": "arrived_dropoff",
+          "toStatus": "completed",
+          "actor": "driver",
+          "note": "Encaissement cash 14 000 DA confirmé",
+          "createdAt": "2026-11-19T14:28:16.314Z"
+        }
+      ]
+    }
+  ],
+  "intercityRequests": [
+    {
+      "id": "ic-1795100365646",
+      "requestCode": "LMX-2026-001205",
+      "clientId": "client-amine",
+      "clientName": "Amine Boudiaf",
+      "clientPhone": "+213551889900",
+      "status": "quoted",
+      "serviceType": "moving",
+      "vehicleCategory": "medium_truck",
+      "fromWilaya": 31,
+      "toWilaya": 16,
+      "pickupAddress": "Oran",
+      "dropoffAddress": "Alger",
+      "distanceKm": 432,
+      "preferredDate": "2026-11-26",
+      "dateFlexibility": "plus_minus_3",
+      "timeSlot": "morning",
+      "floorFrom": 0,
+      "floorTo": 0,
+      "hasElevatorFrom": false,
+      "hasElevatorTo": false,
+      "portersCount": 0,
+      "needsDisassembly": false,
+      "needsPacking": false,
+      "volumeNote": "",
+      "clientComment": "",
+      "photos": [
+        "a.jpg",
+        "b.jpg"
+      ],
+      "refPriceDzd": 30000,
+      "priceFloorDzd": 25500,
+      "priceCapDzd": 54000,
+      "depositRequiredDzd": 0,
+      "depositDeclaredDzd": 0,
+      "depositMethod": "none",
+      "quotesOpenUntil": "2026-11-21T14:59:25.647Z",
+      "checklist": {
+        "truckChecked": false,
+        "portersConfirmed": false,
+        "clientCalled": false
+      },
+      "quotes": [
+        {
+          "id": "icq-1795100379099-wxb",
+          "requestId": "ic-1795100365646",
+          "driverId": "drv-karim",
+          "driverName": "Karim Benali",
+          "driverIntercityRating": 4.9,
+          "driverIntercityCount": 14,
+          "axisExperienceCount": 14,
+          "vehicleCategory": "medium_truck",
+          "vehicleLabel": "Hyundai HD65 (3,5 t)",
+          "plateMasked": "04521-***-31",
+          "priceDzd": 25000,
+          "availableDate": "2026-11-26",
+          "timeSlot": "morning",
+          "portersIncluded": 0,
+          "includesPacking": false,
+          "includesDisassembly": false,
+          "isGroupage": false,
+          "isEmptyReturn": true,
+          "message": "",
+          "status": "pending",
+          "responseMinutes": 15,
+          "createdAt": "2026-11-19T14:59:39.099Z"
+        }
+      ],
+      "events": [
+        {
+          "id": "icev-1795100365647",
+          "fromStatus": null,
+          "toStatus": "collecting",
+          "actor": "client",
+          "note": "Demande inter-wilaya publiée (432 km)",
+          "createdAt": "2026-11-19T14:59:25.647Z"
+        },
+        {
+          "id": "icev-1795100379099",
+          "fromStatus": "collecting",
+          "toStatus": "quoted",
+          "actor": "system",
+          "note": "Premier devis reçu",
+          "createdAt": "2026-11-19T14:59:39.099Z"
+        }
+      ],
+      "createdAt": "2026-11-19T14:59:25.647Z"
+    },
+    {
+      "id": "ic-demo-live",
+      "requestCode": "LMX-2026-001203",
+      "clientId": "client-amine",
+      "clientName": "Amine Boudiaf",
+      "clientPhone": "+213551889900",
+      "status": "in_progress",
+      "serviceType": "freight",
+      "vehicleCategory": "medium_truck",
+      "fromWilaya": 31,
+      "toWilaya": 16,
+      "pickupAddress": "Zone Industrielle Es Senia, Oran",
+      "dropoffAddress": "Parc Logistique Baba Ali, Alger",
+      "distanceKm": 432,
+      "preferredDate": "2026-11-17",
+      "dateFlexibility": "fixed",
+      "timeSlot": "morning",
+      "floorFrom": 0,
+      "floorTo": 0,
+      "hasElevatorFrom": true,
+      "hasElevatorTo": true,
+      "portersCount": 1,
+      "needsDisassembly": false,
+      "needsPacking": true,
+      "volumeNote": "8 palettes marchandises · Livraison prioritaire",
+      "clientComment": "Suivi GPS actif sur autoroute Est–Ouest.",
+      "photos": [
+        "ic_salon.jpg",
+        "ic_cuisine.jpg"
+      ],
+      "refPriceDzd": 36000,
+      "priceFloorDzd": 30500,
+      "priceCapDzd": 64500,
+      "agreedPriceDzd": 35000,
+      "depositRequiredDzd": 0,
+      "depositDeclaredDzd": 0,
+      "depositMethod": "none",
+      "clientCommittedAt": "2026-11-16T15:00:00Z",
+      "driverId": "drv-karim",
+      "driverName": "Karim Benali",
+      "driverPhone": "+213661234567",
+      "quotesOpenUntil": "2026-11-16T18:00:00Z",
+      "checklist": {
+        "truckChecked": true,
+        "portersConfirmed": true,
+        "clientCalled": true
+      },
+      "quotes": [
+        {
+          "id": "icq-live-1",
+          "requestId": "ic-demo-live",
+          "driverId": "drv-karim",
+          "driverName": "Karim Benali",
+          "driverIntercityRating": 4.9,
+          "driverIntercityCount": 14,
+          "axisExperienceCount": 14,
+          "vehicleCategory": "medium_truck",
+          "vehicleLabel": "Hyundai HD65 (3,5 t)",
+          "plateMasked": "04521-***-31",
+          "priceDzd": 35000,
+          "availableDate": "2026-11-17",
+          "timeSlot": "morning",
+          "portersIncluded": 1,
+          "includesPacking": true,
+          "includesDisassembly": false,
+          "isGroupage": false,
+          "isEmptyReturn": false,
+          "message": "Départ matinal par autoroute Est–Ouest, suivi GPS en direct.",
+          "status": "accepted",
+          "responseMinutes": 25,
+          "createdAt": "2026-11-16T12:15:00Z"
+        }
+      ],
+      "events": [
+        {
+          "id": "icev-live-1",
+          "fromStatus": null,
+          "toStatus": "collecting",
+          "actor": "client",
+          "note": "Demande Oran → Alger publiée",
+          "createdAt": "2026-11-16T11:30:00Z"
+        },
+        {
+          "id": "icev-live-2",
+          "fromStatus": "quoted",
+          "toStatus": "booked",
+          "actor": "client",
+          "note": "Réservé avec Karim Benali à 35 000 DA",
+          "createdAt": "2026-11-16T15:00:00Z"
+        },
+        {
+          "id": "icev-live-3",
+          "fromStatus": "booked",
+          "toStatus": "in_progress",
+          "actor": "driver",
+          "note": "Chargement effectué · En route sur l’autoroute Est–Ouest",
+          "createdAt": "2026-11-19T12:58:16.314Z"
+        }
+      ],
+      "driverLivePos": {
+        "lat": 36.1652,
+        "lng": 1.3345,
+        "heading": 68,
+        "speedKmh": 78,
+        "ts": "2026-11-19T14:57:31.314Z"
+      },
+      "driverTrail": [
+        {
+          "lat": 35.6971,
+          "lng": -0.6308,
+          "ts": "2026-11-19T12:58:16.314Z"
+        },
+        {
+          "lat": 35.7373,
+          "lng": 0.556,
+          "ts": "2026-11-19T13:43:16.314Z"
+        },
+        {
+          "lat": 35.951,
+          "lng": 0.922,
+          "ts": "2026-11-19T14:18:16.314Z"
+        },
+        {
+          "lat": 36.1652,
+          "lng": 1.3345,
+          "ts": "2026-11-19T14:57:31.314Z"
+        }
+      ],
+      "createdAt": "2026-11-16T11:30:00Z"
+    },
+    {
+      "id": "ic-demo-1",
+      "requestCode": "LMX-2026-001204",
+      "clientId": "client-amine",
+      "clientName": "Amine Boudiaf",
+      "clientPhone": "+213551889900",
+      "status": "quoted",
+      "serviceType": "moving",
+      "vehicleCategory": "medium_truck",
+      "fromWilaya": 31,
+      "toWilaya": 16,
+      "pickupAddress": "Es Senia, Oran",
+      "dropoffAddress": "Bab Ezzouar, Alger",
+      "distanceKm": 432,
+      "preferredDate": "2026-12-05",
+      "dateFlexibility": "plus_minus_1",
+      "timeSlot": "morning",
+      "floorFrom": 2,
+      "floorTo": 4,
+      "hasElevatorFrom": false,
+      "hasElevatorTo": true,
+      "portersCount": 2,
+      "needsDisassembly": true,
+      "needsPacking": false,
+      "volumeNote": "F3 complet : salon, 2 chambres, cuisine, électroménager",
+      "clientComment": "Possibilité de charger à 8h00.",
+      "photos": [
+        "ic_salon.jpg",
+        "ic_cuisine.jpg"
+      ],
+      "refPriceDzd": 39000,
+      "priceFloorDzd": 33000,
+      "priceCapDzd": 70000,
+      "clientBudgetDzd": 36000,
+      "depositRequiredDzd": 0,
+      "depositDeclaredDzd": 0,
+      "depositMethod": "none",
+      "quotesOpenUntil": "2026-11-20T14:00:00Z",
+      "checklist": {
+        "truckChecked": false,
+        "portersConfirmed": false,
+        "clientCalled": false
+      },
+      "quotes": [
+        {
+          "id": "icq-1",
+          "requestId": "ic-demo-1",
+          "driverId": "drv-mourad",
+          "driverName": "Mourad Mansouri",
+          "driverIntercityRating": 0,
+          "driverIntercityCount": 0,
+          "axisExperienceCount": 0,
+          "vehicleCategory": "medium_truck",
+          "vehicleLabel": "JAC 3,5 t",
+          "plateMasked": "01892-***-31",
+          "priceDzd": 26500,
+          "availableDate": "2026-12-06",
+          "timeSlot": "morning",
+          "portersIncluded": 0,
+          "includesPacking": false,
+          "includesDisassembly": false,
+          "isGroupage": true,
+          "isEmptyReturn": false,
+          "message": "Groupage possible si vous êtes flexible pour le 6 décembre.",
+          "status": "pending",
+          "responseMinutes": 190,
+          "createdAt": "2026-11-18T10:20:00Z"
+        }
+      ],
+      "events": [
+        {
+          "id": "icev-1",
+          "fromStatus": null,
+          "toStatus": "collecting",
+          "actor": "client",
+          "note": "Demande Oran → Alger publiée",
+          "createdAt": "2026-11-18T09:00:00Z"
+        },
+        {
+          "id": "icev-2",
+          "fromStatus": "collecting",
+          "toStatus": "quoted",
+          "actor": "system",
+          "note": "1er devis reçu",
+          "createdAt": "2026-11-18T10:20:00Z"
+        }
+      ],
+      "createdAt": "2026-11-18T09:00:00Z"
+    }
+  ],
+  "emptyReturns": [
+    {
+      "id": "er-1795100379081",
+      "driverId": "drv-karim",
+      "driverName": "Karim Benali",
+      "vehicleCategory": "medium_truck",
+      "fromWilaya": 31,
+      "toWilaya": 16,
+      "departDate": "2026-11-26",
+      "availableM3": 12,
+      "maxWeightKg": 3500,
+      "isActive": true,
+      "createdAt": "2026-11-19T14:59:39.081Z"
+    },
+    {
+      "id": "er-1",
+      "driverId": "drv-karim",
+      "driverName": "Karim Benali",
+      "vehicleCategory": "medium_truck",
+      "fromWilaya": 16,
+      "toWilaya": 31,
+      "departDate": "2026-12-06",
+      "availableM3": 12,
+      "maxWeightKg": 3500,
+      "isActive": true,
+      "createdAt": "2026-11-18T08:00:00Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": "pay-1",
+      "driverId": "drv-mourad",
+      "driverName": "Mourad Mansouri",
+      "method": "baridimob",
+      "amountDzd": 1000,
+      "status": "pending",
+      "reference": "BM-774512",
+      "proofLabel": "recu_baridimob_mourad.jpg",
+      "proofHash": "hash_bm_774512",
+      "submittedAt": "2026-11-18T08:15:00Z",
+      "periodDays": 30
+    },
+    {
+      "id": "pay-2",
+      "driverId": "drv-karim",
+      "driverName": "Karim Benali",
+      "method": "ccp",
+      "amountDzd": 1000,
+      "status": "approved",
+      "reference": "CCP-190442",
+      "proofLabel": "recu_ccp_karim.jpg",
+      "proofHash": "hash_ccp_190442",
+      "submittedAt": "2026-10-31T14:20:00Z",
+      "reviewedAt": "2026-11-01T09:10:00Z",
+      "periodDays": 30
+    }
+  ],
+  "vouchers": [
+    {
+      "code": "LM-2026-ORAN-0001",
+      "batch": "ORAN-PILOTE-NOV",
+      "periodDays": 30,
+      "maxUses": 1,
+      "uses": 0,
+      "validUntil": "2027-06-30",
+      "createdAt": "2026-11-01T10:00:00Z"
+    },
+    {
+      "code": "LM-2026-ORAN-USED",
+      "batch": "ORAN-PILOTE-NOV",
+      "periodDays": 30,
+      "maxUses": 1,
+      "uses": 1,
+      "validUntil": "2027-06-30",
+      "createdAt": "2026-11-01T10:00:00Z"
+    },
+    {
+      "code": "LM-2025-OLD0-9999",
+      "batch": "TEST-EXP",
+      "periodDays": 30,
+      "maxUses": 1,
+      "uses": 0,
+      "validUntil": "2025-12-31",
+      "createdAt": "2025-01-01T10:00:00Z"
+    }
+  ],
+  "chats": [
+    {
+      "id": "chat-1",
+      "parentType": "intercity_request",
+      "parentId": "ic-demo-live",
+      "senderRole": "driver",
+      "senderName": "Karim Benali",
+      "kind": "text",
+      "body": "Salam, chargement terminé sur Oran. Nous passons Chlef sur l’autoroute Est–Ouest.",
+      "createdAt": "2026-11-19T14:57:51.314Z"
+    }
+  ],
+  "disputes": [
+    {
+      "id": "disp-1",
+      "parentType": "ride",
+      "parentId": "ride-demo-1",
+      "code": "LM-2026-004498",
+      "openedByRole": "client",
+      "openedByName": "Nadia Cherif",
+      "category": "price",
+      "description": "Le volume déclaré correspondait, écart demandé à l’arrivée.",
+      "status": "open",
+      "createdAt": "2026-11-17T16:40:00Z"
+    }
+  ],
+  "reviews": [
+    {
+      "id": "rev-seed-1",
+      "driverId": "drv-karim",
+      "driverName": "Karim Benali",
+      "clientName": "Salima B.",
+      "tripType": "urban",
+      "tripCode": "LM-2026-004388",
+      "serviceType": "moving",
+      "routeSummary": "Sidi El Houari → Canastel, Oran",
+      "stars": 5,
+      "tags": [
+        "Ponctuel",
+        "Soigneux",
+        "Équipe efficace"
+      ],
+      "comment": "Meubles démontés et remontés sans aucune rayure. Équipe très sérieuse.",
+      "createdAt": "2026-11-16T17:20:00Z"
+    },
+    {
+      "id": "rev-seed-2",
+      "driverId": "drv-mourad",
+      "driverName": "Mourad Mansouri",
+      "clientName": "Yacine M.",
+      "tripType": "urban",
+      "tripCode": "LM-2026-004421",
+      "serviceType": "moving",
+      "routeSummary": "Es Senia → Haï Yasmine, Oran",
+      "stars": 5,
+      "tags": [
+        "Ponctuel",
+        "Prix juste",
+        "Sympa"
+      ],
+      "comment": "Respect du tarif annoncé (16 000 DA) et manutentionnaires efficaces.",
+      "createdAt": "2026-11-17T14:45:00Z"
+    },
+    {
+      "id": "rev-seed-3",
+      "driverId": "drv-karim",
+      "driverName": "Karim Benali",
+      "clientName": "Sofiane R.",
+      "tripType": "intercity",
+      "tripCode": "LMX-2026-001140",
+      "serviceType": "moving",
+      "routeSummary": "Oran (31) → Alger (16)",
+      "stars": 5,
+      "tags": [
+        "Soigneux",
+        "Véhicule propre",
+        "Ponctuel"
+      ],
+      "comment": "Trajet Oran–Alger livré à l’heure exacte. Camion propre et sangles fournies.",
+      "createdAt": "2026-11-14T19:10:00Z"
+    },
+    {
+      "id": "rev-seed-4",
+      "driverId": "drv-mourad",
+      "driverName": "Mourad Mansouri",
+      "clientName": "Farid T.",
+      "tripType": "urban",
+      "tripCode": "LM-2026-004405",
+      "serviceType": "freight",
+      "routeSummary": "Zone Industrielle Hassi Ameur → Oran",
+      "stars": 4,
+      "tags": [
+        "Prix juste",
+        "Sympa"
+      ],
+      "comment": "Transport de 4 palettes commerciales sans souci.",
+      "createdAt": "2026-11-12T11:00:00Z"
+    }
+  ],
+  "favorites": [
+    {
+      "id": "fav-seed-1",
+      "clientId": "client-amine",
+      "driverId": "drv-karim",
+      "note": "Très soigneux pour les meubles · Oran & Alger",
+      "createdAt": "2026-11-16T18:00:00Z"
+    }
+  ],
+  "routeTemplates": [
+    {
+      "id": "rtpl-seed-1",
+      "clientId": "client-amine",
+      "name": "Dépôt Es Senia → Boutique Oran Centre",
+      "mode": "urban",
+      "serviceType": "freight",
+      "vehicleCategory": "utility_van",
+      "wilayaCode": 31,
+      "pickupAddress": "Zone Industrielle Es Senia, Oran",
+      "dropoffAddress": "Rue Larbi Ben M’hidi, Oran Centre",
+      "pickupLat": 35.6479,
+      "pickupLng": -0.6217,
+      "dropoffLat": 35.6971,
+      "dropoffLng": -0.6308,
+      "portersCount": 1,
+      "volumeNote": "4 palettes marchandises · Livraison hebdomadaire",
+      "preferredDriverId": "drv-karim",
+      "usageCount": 6,
+      "createdAt": "2026-11-10T09:00:00Z"
+    },
+    {
+      "id": "rtpl-seed-2",
+      "clientId": "client-amine",
+      "name": "Ligne Oran → Alger (Chaîne du froid)",
+      "mode": "intercity",
+      "serviceType": "refrigerated",
+      "vehicleCategory": "medium_truck",
+      "wilayaCode": 31,
+      "fromWilaya": 31,
+      "toWilaya": 16,
+      "pickupAddress": "Es Senia, Oran",
+      "dropoffAddress": "Bab Ezzouar, Alger",
+      "portersCount": 1,
+      "volumeNote": "Produits frais · +4°C régulé",
+      "usageCount": 4,
+      "createdAt": "2026-11-14T11:30:00Z"
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "aud-1795114010515-mla8",
+      "actor": "Karim Benali",
+      "action": "ride.proof_of_delivery",
+      "entityType": "ride",
+      "entityId": "ride-1795113984591",
+      "detail": "LM-2026-004513 : preuve photo enregistrée",
+      "createdAt": "2026-11-19T18:46:50.515Z"
+    },
+    {
+      "id": "aud-1",
+      "actor": "admin@camio.dz",
+      "action": "payment.approve",
+      "entityType": "subscription_payment",
+      "entityId": "pay-2",
+      "detail": "Validation CCP 1 000 DA (Karim Benali) → +30 jours",
+      "createdAt": "2026-11-01T09:10:00Z"
+    },
+    {
+      "id": "aud-2",
+      "actor": "admin@camio.dz",
+      "action": "driver.approve",
+      "entityType": "driver",
+      "entityId": "drv-karim",
+      "detail": "Dossier KYC complet approuvé (4 pièces)",
+      "createdAt": "2026-10-15T11:30:00Z"
+    }
+  ],
+  "rideCounter": 4514,
+  "intercityCounter": 1206
+}
