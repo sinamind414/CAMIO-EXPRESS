@@ -106,7 +106,7 @@ export function AdminWorkspace({
   const activeUrbanRides = rides.filter((r) => !['completed', 'rated', 'cancelled_client', 'cancelled_driver', 'expired'].includes(r.status));
   const openDisputes = disputes.filter((d) => d.status === 'open' || d.status === 'in_review');
   const paidSubsCount = drivers.filter((d) => d.subscription.status === 'active' || d.subscription.status === 'grace').length;
-  const mrrDzd = paidSubsCount * settings.subscriptionPriceDzd;
+  const mrrDzd = paidSubsCount * settings.proPriceDzd;
   const demotedDrivers = drivers.filter((d) => d.isDemotedInBroadcast);
   const lowQualityIntercityDrivers = drivers.filter(
     (d) => d.intercityRatingsCount >= 3 && d.ratingIntercityAvg < 3.5
@@ -960,15 +960,19 @@ export function AdminWorkspace({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                 <div>
                   <label htmlFor="set-sub" className="block font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Abonnement mensuel (DA)
+                    {isAr ? 'سعر برو (دج/شهر)' : 'Prix Pro (DA/mois)'}
                   </label>
                   <input
                     id="set-sub"
+                    data-testid="setting-pro-price"
                     type="number"
-                    value={settingsDraft.subscriptionPriceDzd}
-                    onChange={(e) =>
-                      setSettingsDraft((s) => ({ ...s, subscriptionPriceDzd: Number(e.target.value) }))
-                    }
+                    min={0}
+                    value={settingsDraft.proPriceDzd}
+                    onChange={(e) => {
+                      const v = Math.max(0, Number(e.target.value));
+                      // Une seule source de vérité : le champ historique suit le prix Pro.
+                      setSettingsDraft((s) => ({ ...s, proPriceDzd: v, subscriptionPriceDzd: v }));
+                    }}
                     className="w-full h-9 px-2.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 tabular-nums"
                   />
                 </div>
@@ -1061,6 +1065,47 @@ export function AdminWorkspace({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+                {/* Modèle « visibilité » — T5 : réglages du tier Pro */}
+                <label className="flex items-start gap-2.5 p-3 rounded border border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/30 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    data-testid="setting-free-tier-toggle"
+                    checked={Boolean(settingsDraft.freeTierEnabled)}
+                    onChange={(e) => setSettingsDraft((s) => ({ ...s, freeTierEnabled: e.target.checked }))}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    <strong className="block text-slate-900 dark:text-slate-100">
+                      {isAr ? 'السائقون المجانيون يبقون مرئيين' : 'Chauffeurs gratuits visibles & recevables'}
+                    </strong>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      {isAr
+                        ? 'القاعدة رقم 1: بناء السيولة. لا أحد يُخفى عن الطلبات.'
+                        : 'Règle n°1 : construction de la liquidité. Personne n’est coupé des courses.'}
+                    </span>
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-2.5 p-3 rounded border border-amber-300 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-950/40 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    data-testid="setting-hide-unpaid-toggle"
+                    checked={Boolean(settingsDraft.hideUnpaidProfiles)}
+                    onChange={(e) => setSettingsDraft((s) => ({ ...s, hideUnpaidProfiles: e.target.checked }))}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    <strong className="block text-amber-900 dark:text-amber-200">
+                      {isAr ? 'إخفاء الملفات المنتهية (profil dort)' : 'Masquer les profils expirés (« profil dort »)'}
+                    </strong>
+                    <span className="text-amber-800/80 dark:text-amber-300/80">
+                      {isAr
+                        ? 'فعّل فقط بعد التحقق من السيولة (≥40 عملية/شهر). يخفي الملفات المنتهية من الدليل فقط، مع فترة سماح.'
+                        : 'À activer uniquement après validation de la liquidité (≥40 missions/mois). Masque les profils expirés de l’annuaire, hors grâce.'}
+                    </span>
+                  </span>
+                </label>
+
                 <label className="flex items-start gap-2.5 p-3 rounded border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 cursor-pointer">
                   <input
                     type="checkbox"
